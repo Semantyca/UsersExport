@@ -1,0 +1,14 @@
+{
+  "require-dev": {
+    "phpunit/phpunit": "9.5"
+  },
+  "require": {
+    "php": "^8.2",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Semantyca\\Component\\Usersexport\\Administrator\\": "com_usersexport/admin/src/"
+    }
+  }
+}
