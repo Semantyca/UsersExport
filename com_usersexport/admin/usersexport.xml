@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="component" version="4.0" method="upgrade">
+
+    <name>Usersexport</name>
+    <creationDate>June 2024</creationDate>
+    <author>aidazi</author>
+    <authorUrl>https://absolute.lv</authorUrl>
+    <copyright>Nzimas</copyright>
+    <license>GPL v3</license>
+    <version>0.0.1</version>
+    <description>it helps to export user list</description>
+
+    <namespace path="src/">Semantyca\Component\Usersexport</namespace>
+
+    <files folder="./site/">
+        <folder>language</folder>
+        <folder>src</folder>
+        <folder>tmpl</folder>
+    </files>
+
+    <languages>
+        <language tag="en-GB">./site/language/en-GB/en-GB.com_usersexport.ini</language>
+        <language tag="pt-PT">./site/language/pt-PT/pt-PT.com_usersexport.ini</language>
+    </languages>
+
+    <administration>
+
+        <menu link="index.php?option=com_usersexport">Users export</menu>
+        <files folder="./admin/">
+            <filename>access.xml</filename>
+            <filename>config.xml</filename>
+            <folder>language</folder>
+            <folder>assets</folder>
+            <folder>services</folder>
+            <folder>sql</folder>
+            <folder>src</folder>
+            <folder>tmpl</folder>
+        </files>
+
+        <languages>
+            <language tag="en-GB">./admin/language/en-GB/en-GB.com_usersexport.ini</language>
+            <language tag="en-GB">./admin/language/en-GB/en-GB.com_usersexport.sys.ini</language>
+            <language tag="pt-PT">./admin/language/pt-PT/pt-PT.com_usersexport.ini</language>
+            <language tag="pt-PT">./admin/language/pt-PT/pt-PT.com_usersexport.sys.ini</language>
+        </languages>
+
+    </administration>
+
+    <scriptfile>installer_script.php</scriptfile>
+
+    <install>
+        <sql>
+            <file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+        </sql>
+    </install>
+    <uninstall>
+        <sql>
+            <file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+        </sql>
+    </uninstall>
+    <update>
+        <schemas>
+            <schemapath type="mysql">sql/updates</schemapath>
+        </schemas>
+    </update>
+
+
+</extension>
