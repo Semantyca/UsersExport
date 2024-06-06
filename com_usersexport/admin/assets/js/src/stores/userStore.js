@@ -45,12 +45,14 @@ export const useUserStore = defineStore('userStore', {
                 });
 
                 const pageObj = response.data;
-                console.log(pageObj.data.docs);
                 if (pageObj && pageObj.data) {
-                    this.userMap.set(page, pageObj.data.docs);
-                    this.pagination.currentPage = page;
-                    this.pagination.totalItems = pageObj.data.count;
-                    this.pagination.totalPages = pageObj.data.maxPage;
+                    const { docs, count, maxPage, current } = pageObj.data;
+                    this.pagination.page = current;
+                    this.pagination.pageSize = current;
+                    this.pagination.itemCount = count;
+                    this.pagination.pageCount = maxPage;
+                    this.userMap.set(page, { docs });
+
                 }
 
                 loadingBar.finish();
