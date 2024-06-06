@@ -8,6 +8,7 @@ import {
     NMessageProvider
 } from "naive-ui";
 import '../../tailwind.css';
+import {createPinia} from "pinia";
 
 const joomlaBootstrapTheme = {
     common: {
@@ -65,6 +66,7 @@ const app = createApp({
     },
 });
 
+app.use(pinia);
 app.mount('#app');
 
 export const globalProperties = app.config.globalProperties;
