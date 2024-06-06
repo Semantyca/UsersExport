@@ -9,26 +9,25 @@
     <version>0.0.1</version>
     <description>it helps to export user list</description>
 
-    <namespace path="src/">Semantyca\Component\Usersexport</namespace>
+    <namespace path="src">Semantyca\Component\Usersexport</namespace>
 
     <administration>
         <menu link="index.php?option=com_usersexport">Users export</menu>
-        <files folder="./admin/">
-            <folder>language</folder>
+        <files folder="admin">
+            <folder>services</folder>
             <folder>assets</folder>
+            <folder>language</folder>
             <folder>src</folder>
             <folder>tmpl</folder>
         </files>
 
         <languages>
-            <language tag="en-GB">./admin/language/en-GB/en-GB.com_usersexport.ini</language>
-            <language tag="en-GB">./admin/language/en-GB/en-GB.com_usersexport.sys.ini</language>
-            <language tag="pt-PT">./admin/language/pt-PT/pt-PT.com_usersexport.ini</language>
-            <language tag="pt-PT">./admin/language/pt-PT/pt-PT.com_usersexport.sys.ini</language>
+            <language tag="en-GB">admin/language/en-GB/en-GB.com_usersexport.ini</language>
+            <language tag="en-GB">admin/language/en-GB/en-GB.com_usersexport.sys.ini</language>
+            <language tag="pt-PT">admin/language/pt-PT/pt-PT.com_usersexport.ini</language>
+            <language tag="pt-PT">admin/language/pt-PT/pt-PT.com_usersexport.sys.ini</language>
         </languages>
-
     </administration>
 
-    <scriptfile>installer_script.php</scriptfile>
-
+    <scriptfile>admin/installer_script.php</scriptfile>
 </extension>
