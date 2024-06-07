@@ -20,12 +20,34 @@ class UsersController extends BaseController
             // Pagination parameters
             $currentPage  = $this->input->getInt('page', 1);
             $itemsPerPage = $this->input->getInt('limit', 10);
+            $fields       = $this->input->get('fields', [], 'array'); // List of fields to select
 
             $model  = $this->getModel('Users', 'Administrator', ['ignore_request' => true]);
 
-            $users = $model->getUsers($currentPage, $itemsPerPage);
+            $users = $model->getUsers($currentPage, $itemsPerPage, $fields);
 
             echo new JsonResponse($users);
+        }
+        catch (Exception $e)
+        {
+            http_response_code(500);
+            echo new JsonResponse($e->getMessage(), 'error', true);
+        }
+        finally
+        {
+            $app->close();
+        }
+    }
+
+    public function getAvailableFields()
+    {
+        $app = Factory::getApplication();
+        header('Content-Type: application/json');
+        try
+        {
+            $model = $this->getModel('Users', 'Administrator', ['ignore_request' => true]);
+            $fields = $model->getAvailableFields();
+            echo new JsonResponse($fields);
         }
         catch (Exception $e)
         {

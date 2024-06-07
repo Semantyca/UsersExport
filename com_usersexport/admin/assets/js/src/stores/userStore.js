@@ -10,7 +10,8 @@ export const useUserStore = defineStore('userStore', {
             itemsPerPage: 10,
             totalItems: 0,
             totalPages: 0
-        }
+        },
+        availableFields: [] // New state property to hold available fields
     }),
     getters: {
         getPagination() {
@@ -27,20 +28,24 @@ export const useUserStore = defineStore('userStore', {
         getCurrentPage() {
             const pageData = this.userMap.get(this.pagination.currentPage);
             return pageData ? pageData.docs : [];
+        },
+        getAvailableFields() {
+            return this.availableFields.data;
         }
     },
     actions: {
-        async fetchUsers(page = 1) {
+        async fetchUsers(page = 1, fields = []) {
             const message = useMessage();
             const loadingBar = useLoadingBar();
 
             try {
-                loadingBar.start();
+                //loadingBar.start();
 
                 const response = await axios.get('index.php?option=com_usersexport&task=users.findAll', {
                     params: {
                         page: page,
-                        limit: this.pagination.itemsPerPage
+                        limit: this.pagination.itemsPerPage,
+                        fields: fields
                     }
                 });
 
@@ -48,18 +53,31 @@ export const useUserStore = defineStore('userStore', {
                 if (pageObj && pageObj.data) {
                     const { docs, count, maxPage, current } = pageObj.data;
                     this.pagination.page = current;
-                    this.pagination.pageSize = current;
+                    this.pagination.pageSize = this.pagination.itemsPerPage;
                     this.pagination.itemCount = count;
                     this.pagination.pageCount = maxPage;
                     this.userMap.set(page, { docs });
-
                 }
 
-                loadingBar.finish();
+                //loadingBar.finish();
             } catch (error) {
-                loadingBar.error();
+                //loadingBar.error();
                 message.error("Error fetching users: " + error.message);
                 console.error("Error fetching users:", error);
+            }
+        },
+
+        async fetchAvailableFields(usersOnly = false) {
+            try {
+                const response = await axios.get('index.php?option=com_usersexport&task=users.getAvailableFields', {
+                    params: {
+                        usersOnly: usersOnly
+                    }
+                });
+                this.availableFields = response.data; // Store fetched fields in state
+            } catch (error) {
+                console.error("Error fetching available fields:", error);
+                throw error;
             }
         }
     }
