@@ -9,7 +9,7 @@ use Joomla\CMS\MVC\Model\BaseDatabaseModel;
 
 class UsersModel extends BaseDatabaseModel
 {
-    public function getUsers($currentPage = 1, $itemsPerPage = 10, $fields = [])
+    public function getUsers($currentPage = 1, $itemsPerPage = 5, $fields = [])
     {
         $db     = $this->getDatabase();
         $query  = $db->getQuery(true);

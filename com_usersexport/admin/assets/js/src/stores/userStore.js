@@ -7,11 +7,11 @@ export const useUserStore = defineStore('userStore', {
         userMap: new Map(),
         pagination: {
             currentPage: 1,
-            itemsPerPage: 10,
+            itemsPerPage: 5,
             totalItems: 0,
             totalPages: 0
         },
-        availableFields: [] // New state property to hold available fields
+        availableFields: []
     }),
     getters: {
         getPagination() {
@@ -20,9 +20,7 @@ export const useUserStore = defineStore('userStore', {
                 pageSize: this.pagination.itemsPerPage,
                 itemCount: this.pagination.totalItems,
                 pageCount: this.pagination.totalPages,
-                size: 'large',
-                showSizePicker: true,
-                pageSizes: [10, 20, 50]
+                size: 'large'
             };
         },
         getCurrentPage() {

@@ -2,7 +2,7 @@
   <n-card>
     <n-grid :cols="1" x-gap="12" y-gap="12" class="mt-1">
       <n-gi>
-        <n-h1>Users export</n-h1>
+        <n-h2>Users export</n-h2>
       </n-gi>
       <n-gi>
         <n-space>
@@ -11,11 +11,16 @@
         </n-space>
       </n-gi>
       <n-gi>
-        <n-collapse v-model:show="showFilter">
-          <n-collapse-item title="Filter">
-            <n-space size="large">
-              <n-input size="large" v-model="searchQuery" placeholder="Search..." style="width: 400px;" />
-              <n-date-picker size="large" v-model="dateRange" type="daterange" placeholder="Select date range" />
+        <n-collapse-transition :show="showFilter">
+          <n-grid :cols="10" x-gap="12">
+            <n-gi span="3">
+              <n-input size="large" v-model="searchQuery" placeholder="Search..." class="w-[25rem]"/>
+            </n-gi>
+            <n-gi span="2">
+              <n-date-picker size="large" v-model="dateRange" type="daterange" placeholder="Select date range"
+                             class="w-[25rem]"/>
+            </n-gi>
+            <n-gi span="5">
               <n-tree-select
                   filterable
                   clearable
@@ -27,32 +32,34 @@
                   cascade
                   :options="userStore.getAvailableFields"
                   placeholder="Select columns"
+                  class="w-[25rem]"
               />
-            </n-space>
-          </n-collapse-item>
-        </n-collapse>
+            </n-gi>
+          </n-grid>
+        </n-collapse-transition>
       </n-gi>
       <n-gi>
-        <div class="data-table-container">
-          <n-skeleton text v-if="loading" class="data-table-skeleton" title height="30px"></n-skeleton>
-          <n-data-table
-              v-else
-              remote
-              :columns="columns"
-              :data="userStore.getCurrentPage"
-              :pagination="userStore.getPagination"
-              class="data-table"
-          />
-        </div>
+        <n-skeleton text v-if="loading" class="data-table-skeleton" title height="30px"></n-skeleton>
+        <n-data-table
+            v-else
+            remote
+            :columns="columns"
+            :data="userStore.getCurrentPage"
+            :pagination="userStore.getPagination"
+        />
+      </n-gi>
+      <n-gi>
+        <n-h4 class="mb-0">Preview</n-h4>
+        <div class="mb-0">(For the preview the list was truncated)</div>
       </n-gi>
       <n-gi>
         <code-mirror
-            v-model="userStore.getCsvData"
+            v-model="csvData"
             :read-only="true"
             basic
             :lang="lang"
             :dark="dark"
-            :style="{ width: '100%', marginTop: '20px' }"
+            class="w-full"
         />
       </n-gi>
     </n-grid>
@@ -60,14 +67,14 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted, watch } from 'vue';
-import { useUserStore } from '../stores/userStore';
+import {defineComponent, ref, onMounted, watch} from 'vue';
+import {useUserStore} from '../stores/userStore';
 import {
   NCard, NDataTable, NButton, NInput, NDatePicker, NTreeSelect,
-  NSkeleton, NGrid, NGi, NH1, NSpace, NCollapse, NCollapseItem
+  NSkeleton, NGrid, NGi, NH2, NH4, NSpace, NCollapseTransition
 } from 'naive-ui';
 import CodeMirror from 'vue-codemirror6';
-import { markdown } from '@codemirror/lang-markdown';
+import {markdown} from '@codemirror/lang-markdown';
 
 export default defineComponent({
   components: {
@@ -80,20 +87,21 @@ export default defineComponent({
     NSkeleton,
     NGrid,
     NGi,
-    NH1,
+    NH2,
+    NH4,
     NSpace,
-    NCollapse,
-    NCollapseItem,
+    NCollapseTransition,
     CodeMirror
   },
   setup() {
     const userStore = useUserStore();
     const columns = ref([]);
-    const showFilter = ref(false);
     const searchQuery = ref('');
     const dateRange = ref(null);
     const selectedColumns = ref([]);
     const loading = ref(true);
+    const csvData = ref('');
+    const showFilter = ref(false);
 
     const defaultFields = [
       'u.id',
@@ -107,11 +115,11 @@ export default defineComponent({
       columns.value = selectedColumns.value.length > 0
           ? selectedColumns.value.map(field => {
             const [table, column] = field.split('.');
-            return { title: column, key: column };
+            return {title: column, key: column};
           })
           : defaultFields.map(field => {
             const column = field.split('.')[1];
-            return { title: column, key: column };
+            return {title: column, key: column};
           });
     };
 
@@ -119,6 +127,7 @@ export default defineComponent({
       loading.value = true;
       await userStore.fetchUsers(page, selectedColumns.value.length > 0 ? selectedColumns.value : defaultFields);
       loading.value = false;
+      updateCsvData();
     };
 
     const fetchAvailableFields = async () => {
@@ -138,8 +147,9 @@ export default defineComponent({
     };
 
     const exportCSV = () => {
-      const csvData = userStore.getCsvData;
-      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const data = userStore.getCurrentPage;
+      const csv = convertToCSV(data);
+      const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
@@ -148,6 +158,16 @@ export default defineComponent({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    };
+
+    const updateCsvData = () => {
+      const data = userStore.getCurrentPage;
+      csvData.value = convertToCSV(data);
+    };
+
+    const convertToCSV = (data) => {
+      const array = [Object.keys(data[0])].concat(data);
+      return array.map(row => Object.values(row).map(value => `"${value}"`).join(',')).join('\n');
     };
 
     onMounted(() => {
@@ -174,26 +194,16 @@ export default defineComponent({
       exportCSV,
       loading,
       lang: ref(markdown()),
-      dark: ref(false)
+      dark: ref(false),
+      csvData
     };
   }
 });
 </script>
 
 <style scoped>
-.data-table-container {
-  margin-top: 20px;
-}
-
-.data-table {
-  margin-top: 20px;
-}
 
 .data-table-skeleton {
   margin-top: 20px;
-}
-
-.title {
-  margin-bottom: 20px;
 }
 </style>
