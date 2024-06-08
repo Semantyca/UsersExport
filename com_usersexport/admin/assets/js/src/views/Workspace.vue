@@ -54,14 +54,7 @@
         <div class="mb-0">(For the preview the list was truncated)</div>
       </n-gi>
       <n-gi>
-        <code-mirror
-            v-model="csvData"
-            :read-only="true"
-            basic
-            :lang="lang"
-            :dark="dark"
-            class="w-full"
-        />
+        <n-code :code="csvData" language="csv" />
       </n-gi>
     </n-grid>
   </n-card>
@@ -72,10 +65,8 @@ import {defineComponent, ref, onMounted, watch} from 'vue';
 import {useUserStore} from '../stores/userStore';
 import {
   NCard, NDataTable, NButton, NInput, NDatePicker, NTreeSelect,
-  NSkeleton, NGrid, NGi, NH2, NH4, NSpace, NCollapseTransition
+  NSkeleton, NGrid, NGi, NH2, NH4, NSpace, NCollapseTransition, NCode
 } from 'naive-ui';
-import CodeMirror from 'vue-codemirror6';
-import {markdown} from '@codemirror/lang-markdown';
 
 export default defineComponent({
   components: {
@@ -92,7 +83,7 @@ export default defineComponent({
     NH4,
     NSpace,
     NCollapseTransition,
-    CodeMirror
+    NCode
   },
   setup() {
     const userStore = useUserStore();
@@ -170,13 +161,12 @@ export default defineComponent({
     onMounted(() => {
       fetchAvailableFields().then(() => {
         updateColumns();
-        fetchUsers(1, []);
+        fetchUsers(1);
       });
     });
 
     watch(selectedColumns, () => {
-      //updateColumns();
-      updateCsvData();
+      updateColumns();
       fetchUsers(1);
     });
 
@@ -195,8 +185,6 @@ export default defineComponent({
       toggleFilter,
       exportCSV,
       loading,
-      lang: ref(markdown()),
-      dark: ref(false),
       csvData
     };
   }
@@ -204,7 +192,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-
 .data-table-skeleton {
   margin-top: 20px;
 }
