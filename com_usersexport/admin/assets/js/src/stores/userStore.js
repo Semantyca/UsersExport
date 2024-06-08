@@ -11,7 +11,18 @@ export const useUserStore = defineStore('userStore', {
             count: 0,
             pageCount: 1
         },
-        availableFields: []
+        availableFields: [],
+        defaultFields: {
+            label: "users",
+            key: "#__users",
+            children: [
+                { label: 'id', key: '#__users.id' },
+                { label: 'name', key: '#__users.name' },
+                { label: 'username', key: '#__users.username' },
+                { label: 'email', key: '#__users.email' },
+                { label: 'registerDate', key: '#__users.registerDate' }
+            ]
+        }
     }),
     getters: {
         getPagination() {
@@ -37,13 +48,14 @@ export const useUserStore = defineStore('userStore', {
     },
     actions: {
         async fetchUsers(page = 1, fields = []) {
+            console.log(fields);
             const message = useMessage();
             const loadingBar = useLoadingBar();
             try {
                 const response = await axios.get('index.php?option=com_usersexport&task=users.findAll', {
                     params: {
                         page: page,
-                        limit: this.pagination.pageSize,
+                        size: this.pagination.pageSize,
                         fields: fields
                     }
                 });

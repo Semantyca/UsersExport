@@ -9,36 +9,20 @@ use Joomla\CMS\MVC\Model\BaseDatabaseModel;
 
 class UsersModel extends BaseDatabaseModel
 {
-    public function getUsers($currentPage = 1, $itemsPerPage = 5, $fields = [])
+    public function getUsers($currentPage = 1, $itemsPerPage = 10, $fields = [])
     {
         $db     = $this->getDatabase();
         $query  = $db->getQuery(true);
         $offset = ($currentPage - 1) * $itemsPerPage;
 
-        // Default fields from the users table
-        if (empty($fields)) {
-            $fields = [
-                'u.id',
-                'u.name',
-                'u.username',
-                'u.email',
-                'REPEAT("*", 5) AS password', // Masking password with 5 asterisks
-                'u.block',
-                'u.sendEmail',
-                'u.registerDate',
-                'u.lastvisitDate',
-                'u.activation',
-                'u.params',
-                'u.lastResetTime',
-                'u.resetCount',
-                'u.otpKey'
-            ];
-        } else {
-            // Replace the password field with 5 asterisks if it is present in the fields array
-            $fields = array_map(function($field) {
-                return ($field === 'u.password') ? 'REPEAT("*", 5) AS password' : $field;
-            }, $fields);
+        // Ensure fields have the correct format
+        $fields = array_map(function($field) {
+        if ($field === '#__users.password') {
+            return 'REPEAT("*", 5) AS password';
         }
+        $field = str_replace('#__users.', 'u.', $field);
+        return $field;
+        }, $fields);
 
         // Adding fields for notes and groups
         $fields[] = "GROUP_CONCAT(DISTINCT n.subject SEPARATOR ', ') AS notes";
@@ -56,7 +40,6 @@ class UsersModel extends BaseDatabaseModel
                 'u.name',
                 'u.username',
                 'u.email',
-                'u.password',
                 'u.block',
                 'u.sendEmail',
                 'u.registerDate',
@@ -89,7 +72,8 @@ class UsersModel extends BaseDatabaseModel
         ];
     }
 
-    public function getAvailableFields()
+
+    public function getAvailableFields(): array
     {
         $db = $this->getDatabase();
         $app = Factory::getApplication();
@@ -125,16 +109,18 @@ class UsersModel extends BaseDatabaseModel
         $tables = [];
 
         foreach ($columns as $column) {
-            if (!isset($tables[$column->TABLE_NAME])) {
-                $tables[$column->TABLE_NAME] = [
-                    'label' => $column->TABLE_NAME,
-                    'key' => $column->TABLE_NAME,
+            $tableNameWithPrefix = str_replace($prefix, '#__', $column->TABLE_NAME); // Replace actual prefix with #__
+            $tableNameWithoutPrefix = str_replace($prefix, '', $column->TABLE_NAME); // Remove the actual prefix for label
+            if (!isset($tables[$tableNameWithPrefix])) {
+                $tables[$tableNameWithPrefix] = [
+                    'label' => $tableNameWithoutPrefix,
+                    'key' => $tableNameWithPrefix,
                     'children' => []
                 ];
             }
-            $tables[$column->TABLE_NAME]['children'][] = [
-                'label' => $column->TABLE_NAME . '.' . $column->COLUMN_NAME,
-                'key' => $column->TABLE_NAME . '.' . $column->COLUMN_NAME
+            $tables[$tableNameWithPrefix]['children'][] = [
+                'label' => $column->COLUMN_NAME,
+                'key' => $tableNameWithPrefix . '.' . $column->COLUMN_NAME
             ];
         }
 
@@ -144,4 +130,6 @@ class UsersModel extends BaseDatabaseModel
 
         return $options;
     }
+
+
 }

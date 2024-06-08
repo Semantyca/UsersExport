@@ -22,6 +22,7 @@
             </n-gi>
             <n-gi span="5">
               <n-tree-select
+                  :default-value="userStore.defaultFields.children.map(field => field.key)"
                   filterable
                   clearable
                   size="large"
@@ -61,8 +62,8 @@
 </template>
 
 <script>
-import {defineComponent, ref, onMounted, watch} from 'vue';
-import {useUserStore} from '../stores/userStore';
+import { defineComponent, ref, onMounted, watch } from 'vue';
+import { useUserStore } from '../stores/userStore';
 import {
   NCard, NDataTable, NButton, NInput, NDatePicker, NTreeSelect,
   NSkeleton, NGrid, NGi, NH2, NH4, NSpace, NCollapseTransition, NCode
@@ -95,29 +96,18 @@ export default defineComponent({
     const csvData = ref('');
     const showFilter = ref(false);
 
-    const defaultFields = [
-      'u.id',
-      'u.name',
-      'u.username',
-      'u.email',
-      'u.registerDate'
-    ];
-
     const updateColumns = () => {
       columns.value = selectedColumns.value.length > 0
           ? selectedColumns.value.map(field => {
-            const [table, column] = field.split('.');
-            return {title: column, key: column};
+            const column = field.split('.').pop(); // Extract the field name
+            return { title: column, key: column };
           })
-          : defaultFields.map(field => {
-            const column = field.split('.')[1];
-            return {title: column, key: column};
-          });
+          : userStore.defaultFields.children.map(field => ({ title: field.label, key: field.key.split('.').pop() }));
     };
 
-    const fetchUsers = async (page) => {
+    const fetchUsers = async (page, fields) => {
       loading.value = true;
-      await userStore.fetchUsers(page, selectedColumns.value.length > 0 ? selectedColumns.value : defaultFields);
+      await userStore.fetchUsers(page, fields);
       loading.value = false;
       updateCsvData();
     };
@@ -137,7 +127,7 @@ export default defineComponent({
     const exportCSV = () => {
       const data = userStore.getCurrentPage;
       const csv = convertToCSV(data);
-      const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
@@ -160,14 +150,15 @@ export default defineComponent({
 
     onMounted(() => {
       fetchAvailableFields().then(() => {
+        selectedColumns.value = userStore.defaultFields.children.map(field => field.key); // Set default fields to n-tree-select
         updateColumns();
-        fetchUsers(1);
+        fetchUsers(1, selectedColumns.value);
       });
     });
 
     watch(selectedColumns, () => {
       updateColumns();
-      fetchUsers(1);
+      fetchUsers(1, selectedColumns.value);
     });
 
     function handlePageChange(page) {
