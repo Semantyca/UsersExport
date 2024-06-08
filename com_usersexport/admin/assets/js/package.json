@@ -11,6 +11,7 @@
   "author": "aidazi",
   "license": "ISC",
   "dependencies": {
+    "@codemirror/lang-markdown": "^6.2.5",
     "@vicons/tabler": "^0.12.0",
     "axios": "^1.7.2",
     "naive-ui": "^2.37.3",
@@ -28,6 +29,7 @@
     "fs-extra": "^11.2.0",
     "style-loader": "^3.3.4",
     "vfonts": "^0.0.3",
+    "vue-codemirror6": "^1.3.0",
     "vue-loader": "^17.4.2",
     "vue-style-loader": "^4.1.3",
     "vue-template-compiler": "^2.7.16",

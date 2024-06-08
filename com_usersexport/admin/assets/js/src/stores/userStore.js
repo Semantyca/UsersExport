@@ -31,6 +31,10 @@ export const useUserStore = defineStore('userStore', {
         },
         getAvailableFields() {
             return this.availableFields.data;
+        },
+        getCsvData() {
+            const data = this.getCurrentPage;
+            return data.length ? this.convertToCSV(data) : '';
         }
     },
     actions: {
@@ -39,8 +43,6 @@ export const useUserStore = defineStore('userStore', {
             const loadingBar = useLoadingBar();
 
             try {
-                //loadingBar.start();
-
                 const response = await axios.get('index.php?option=com_usersexport&task=users.findAll', {
                     params: {
                         page: page,
@@ -58,10 +60,7 @@ export const useUserStore = defineStore('userStore', {
                     this.pagination.pageCount = maxPage;
                     this.userMap.set(page, { docs });
                 }
-
-                //loadingBar.finish();
             } catch (error) {
-                //loadingBar.error();
                 message.error("Error fetching users: " + error.message);
                 console.error("Error fetching users:", error);
             }
@@ -79,6 +78,11 @@ export const useUserStore = defineStore('userStore', {
                 console.error("Error fetching available fields:", error);
                 throw error;
             }
+        },
+
+        convertToCSV(data) {
+            const array = [Object.keys(data[0])].concat(data);
+            return array.map(row => Object.values(row).map(value => `"${value}"`).join(',')).join('\n');
         }
     }
 });

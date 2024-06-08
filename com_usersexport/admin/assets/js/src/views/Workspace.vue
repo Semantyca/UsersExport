@@ -1,46 +1,73 @@
 <template>
   <n-card>
-    <h1 class="title">Users export</h1>
-    <div class="toolbar">
-      <n-button type="info" size="large" @click="toggleFilter">Filter</n-button>
-      <n-button type="primary" size="large" @click="exportCSV">Export CSV</n-button>
-    </div>
-    <transition name="slide-down">
-      <div v-if="showFilter" class="filter-toolbar">
-        <n-input size="large" v-model="searchQuery" placeholder="Search..." style="width: 400px;" />
-        <n-date-picker size="large" v-model="dateRange" type="daterange" placeholder="Select date range" />
-        <n-tree-select
-            filterable
-            clearable
-            size="large"
-            v-model="selectedColumns"
-            multiple
-            check-strategy="child"
-            checkable
-            cascade
-            :options="userStore.getAvailableFields"
-            placeholder="Select columns"
+    <n-grid :cols="1" x-gap="12" y-gap="12" class="mt-1">
+      <n-gi>
+        <n-h1>Users export</n-h1>
+      </n-gi>
+      <n-gi>
+        <n-space>
+          <n-button type="info" size="large" @click="toggleFilter">Filter</n-button>
+          <n-button type="primary" size="large" @click="exportCSV">Export CSV</n-button>
+        </n-space>
+      </n-gi>
+      <n-gi>
+        <n-collapse v-model:show="showFilter">
+          <n-collapse-item title="Filter">
+            <n-space size="large">
+              <n-input size="large" v-model="searchQuery" placeholder="Search..." style="width: 400px;" />
+              <n-date-picker size="large" v-model="dateRange" type="daterange" placeholder="Select date range" />
+              <n-tree-select
+                  filterable
+                  clearable
+                  size="large"
+                  v-model="selectedColumns"
+                  multiple
+                  check-strategy="child"
+                  checkable
+                  cascade
+                  :options="userStore.getAvailableFields"
+                  placeholder="Select columns"
+              />
+            </n-space>
+          </n-collapse-item>
+        </n-collapse>
+      </n-gi>
+      <n-gi>
+        <div class="data-table-container">
+          <n-skeleton text v-if="loading" class="data-table-skeleton" title height="30px"></n-skeleton>
+          <n-data-table
+              v-else
+              remote
+              :columns="columns"
+              :data="userStore.getCurrentPage"
+              :pagination="userStore.getPagination"
+              class="data-table"
+          />
+        </div>
+      </n-gi>
+      <n-gi>
+        <code-mirror
+            v-model="userStore.getCsvData"
+            :read-only="true"
+            basic
+            :lang="lang"
+            :dark="dark"
+            :style="{ width: '100%', marginTop: '20px' }"
         />
-      </div>
-    </transition>
-    <div class="data-table-container">
-      <n-skeleton text v-if="loading" class="data-table-skeleton" title height="30px"></n-skeleton>
-      <n-data-table
-          v-else
-          remote
-          :columns="columns"
-          :data="userStore.getCurrentPage"
-          :pagination="userStore.getPagination"
-          class="data-table"
-      />
-    </div>
+      </n-gi>
+    </n-grid>
   </n-card>
 </template>
 
 <script>
 import { defineComponent, ref, onMounted, watch } from 'vue';
 import { useUserStore } from '../stores/userStore';
-import { NCard, NDataTable, NButton, NInput, NDatePicker, NTreeSelect, NSkeleton } from 'naive-ui';
+import {
+  NCard, NDataTable, NButton, NInput, NDatePicker, NTreeSelect,
+  NSkeleton, NGrid, NGi, NH1, NSpace, NCollapse, NCollapseItem
+} from 'naive-ui';
+import CodeMirror from 'vue-codemirror6';
+import { markdown } from '@codemirror/lang-markdown';
 
 export default defineComponent({
   components: {
@@ -50,7 +77,14 @@ export default defineComponent({
     NInput,
     NDatePicker,
     NTreeSelect,
-    NSkeleton
+    NSkeleton,
+    NGrid,
+    NGi,
+    NH1,
+    NSpace,
+    NCollapse,
+    NCollapseItem,
+    CodeMirror
   },
   setup() {
     const userStore = useUserStore();
@@ -104,7 +138,16 @@ export default defineComponent({
     };
 
     const exportCSV = () => {
-      // Logic for exporting CSV
+      const csvData = userStore.getCsvData;
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'users_export.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     };
 
     onMounted(() => {
@@ -129,25 +172,15 @@ export default defineComponent({
       selectedColumns,
       toggleFilter,
       exportCSV,
-      loading
+      loading,
+      lang: ref(markdown()),
+      dark: ref(false)
     };
   }
 });
 </script>
 
 <style scoped>
-.toolbar {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.filter-toolbar {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
 .data-table-container {
   margin-top: 20px;
 }
@@ -156,19 +189,11 @@ export default defineComponent({
   margin-top: 20px;
 }
 
-.title {
-  margin-bottom: 20px;
-}
-
 .data-table-skeleton {
   margin-top: 20px;
 }
 
-.slide-down-enter-active, .slide-down-leave-active {
-  transition: max-height 0.5s ease;
-}
-.slide-down-enter, .slide-down-leave-to /* .slide-down-leave-active in <2.1.8 */ {
-  max-height: 0;
-  overflow: hidden;
+.title {
+  margin-bottom: 20px;
 }
 </style>
