@@ -6,25 +6,25 @@ export const useUserStore = defineStore('userStore', {
     state: () => ({
         userMap: new Map(),
         pagination: {
-            currentPage: 1,
-            itemsPerPage: 5,
-            totalItems: 0,
-            totalPages: 0
+            page: 1,
+            pageSize: 5,
+            count: 0,
+            pageCount: 1
         },
         availableFields: []
     }),
     getters: {
         getPagination() {
             return {
-                page: this.pagination.currentPage,
-                pageSize: this.pagination.itemsPerPage,
-                itemCount: this.pagination.totalItems,
-                pageCount: this.pagination.totalPages,
+                page: this.pagination.page,
+                pageSize: this.pagination.pageSize,
+                itemCount: this.pagination.count,
+                pageCount: this.pagination.pageCount,
                 size: 'large'
             };
         },
         getCurrentPage() {
-            const pageData = this.userMap.get(this.pagination.currentPage);
+            const pageData = this.userMap.get(this.pagination.page);
             return pageData ? pageData.docs : [];
         },
         getAvailableFields() {
@@ -39,12 +39,11 @@ export const useUserStore = defineStore('userStore', {
         async fetchUsers(page = 1, fields = []) {
             const message = useMessage();
             const loadingBar = useLoadingBar();
-
             try {
                 const response = await axios.get('index.php?option=com_usersexport&task=users.findAll', {
                     params: {
                         page: page,
-                        limit: this.pagination.itemsPerPage,
+                        limit: this.pagination.pageSize,
                         fields: fields
                     }
                 });
@@ -53,8 +52,7 @@ export const useUserStore = defineStore('userStore', {
                 if (pageObj && pageObj.data) {
                     const { docs, count, maxPage, current } = pageObj.data;
                     this.pagination.page = current;
-                    this.pagination.pageSize = this.pagination.itemsPerPage;
-                    this.pagination.itemCount = count;
+                    this.pagination.count = count;
                     this.pagination.pageCount = maxPage;
                     this.userMap.set(page, { docs });
                 }

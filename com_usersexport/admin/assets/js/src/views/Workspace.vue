@@ -46,6 +46,7 @@
             :columns="columns"
             :data="userStore.getCurrentPage"
             :pagination="userStore.getPagination"
+            @update:page="handlePageChange"
         />
       </n-gi>
       <n-gi>
@@ -138,10 +139,6 @@ export default defineComponent({
       }
     };
 
-    const handlePageChange = (page) => {
-      fetchUsers(page);
-    };
-
     const toggleFilter = () => {
       showFilter.value = !showFilter.value;
     };
@@ -173,14 +170,19 @@ export default defineComponent({
     onMounted(() => {
       fetchAvailableFields().then(() => {
         updateColumns();
-        fetchUsers(1);
+        fetchUsers(1, []);
       });
     });
 
     watch(selectedColumns, () => {
-      updateColumns();
+      //updateColumns();
+      updateCsvData();
       fetchUsers(1);
     });
+
+    function handlePageChange(page) {
+      userStore.fetchUsers(page, []);
+    }
 
     return {
       columns,
