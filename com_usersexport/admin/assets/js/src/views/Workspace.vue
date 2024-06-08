@@ -7,6 +7,7 @@
       <n-gi>
         <n-space>
           <n-button type="info" size="large" @click="toggleFilter">Filter</n-button>
+          <n-button type="success" size="large" @click="togglePreview">Preview</n-button>
           <n-button type="primary" size="large" @click="exportCSV">Export CSV</n-button>
         </n-space>
       </n-gi>
@@ -26,7 +27,7 @@
                   filterable
                   clearable
                   size="large"
-                  v-model="selectedColumns"
+                  v-model="userStore.selectedFields"
                   multiple
                   check-strategy="child"
                   checkable
@@ -40,6 +41,11 @@
         </n-collapse-transition>
       </n-gi>
       <n-gi>
+        <n-collapse-transition :show="showPreview">
+          <n-code :code="csvData" language="csv" />
+        </n-collapse-transition>
+      </n-gi>
+      <n-gi>
         <n-skeleton text v-if="loading" class="data-table-skeleton" title height="30px"></n-skeleton>
         <n-data-table
             v-else
@@ -49,13 +55,6 @@
             :pagination="userStore.getPagination"
             @update:page="handlePageChange"
         />
-      </n-gi>
-      <n-gi>
-        <n-h4 class="mb-0">Preview</n-h4>
-        <div class="mb-0">(For the preview the list was truncated)</div>
-      </n-gi>
-      <n-gi>
-        <n-code :code="csvData" language="csv" />
       </n-gi>
     </n-grid>
   </n-card>
@@ -91,18 +90,16 @@ export default defineComponent({
     const columns = ref([]);
     const searchQuery = ref('');
     const dateRange = ref(null);
-    const selectedColumns = ref([]);
     const loading = ref(true);
     const csvData = ref('');
     const showFilter = ref(false);
+    const showPreview = ref(false);
 
     const updateColumns = () => {
-      columns.value = selectedColumns.value.length > 0
-          ? selectedColumns.value.map(field => {
-            const column = field.split('.').pop(); // Extract the field name
-            return { title: column, key: column };
-          })
-          : userStore.defaultFields.children.map(field => ({ title: field.label, key: field.key.split('.').pop() }));
+      columns.value = userStore.getSelectedFields.map(field => {
+        const column = field.split('.').pop(); // Extract the field name
+        return { title: column, key: column };
+      });
     };
 
     const fetchUsers = async (page, fields) => {
@@ -114,7 +111,7 @@ export default defineComponent({
 
     const fetchAvailableFields = async () => {
       try {
-        await userStore.fetchAvailableFields(true);
+        await userStore.fetchAvailableFields();
       } catch (error) {
         console.error("Error fetching available fields:", error);
       }
@@ -122,6 +119,11 @@ export default defineComponent({
 
     const toggleFilter = () => {
       showFilter.value = !showFilter.value;
+    };
+
+    const togglePreview = () => {
+      updateCsvData();
+      showPreview.value = !showPreview.value;
     };
 
     const exportCSV = () => {
@@ -150,19 +152,19 @@ export default defineComponent({
 
     onMounted(() => {
       fetchAvailableFields().then(() => {
-        selectedColumns.value = userStore.defaultFields.children.map(field => field.key); // Set default fields to n-tree-select
+        userStore.setSelectedFields(userStore.defaultFields.children.map(field => field.key)); // Set default fields to selectedFields in the store
         updateColumns();
-        fetchUsers(1, selectedColumns.value);
+        fetchUsers(1, userStore.getSelectedFields);
       });
     });
 
-    watch(selectedColumns, () => {
+    watch(() => userStore.selectedFields, () => {
       updateColumns();
-      fetchUsers(1, selectedColumns.value);
+      fetchUsers(1, userStore.getSelectedFields);
     });
 
     function handlePageChange(page) {
-      userStore.fetchUsers(page, []);
+      fetchUsers(page, userStore.getSelectedFields);
     }
 
     return {
@@ -172,11 +174,12 @@ export default defineComponent({
       showFilter,
       searchQuery,
       dateRange,
-      selectedColumns,
       toggleFilter,
+      togglePreview,
       exportCSV,
       loading,
-      csvData
+      csvData,
+      showPreview
     };
   }
 });

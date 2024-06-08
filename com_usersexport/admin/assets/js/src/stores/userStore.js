@@ -22,7 +22,8 @@ export const useUserStore = defineStore('userStore', {
                 { label: 'email', key: '#__users.email' },
                 { label: 'registerDate', key: '#__users.registerDate' }
             ]
-        }
+        },
+        selectedFields: [] // Add selectedFields to the state
     }),
     getters: {
         getPagination() {
@@ -39,7 +40,11 @@ export const useUserStore = defineStore('userStore', {
             return pageData ? pageData.docs : [];
         },
         getAvailableFields() {
+            //TODO redundant
             return this.availableFields.data;
+        },
+        getSelectedFields() {
+            return this.selectedFields;
         },
         getCsvData() {
             const data = this.getCurrentPage;
@@ -48,15 +53,15 @@ export const useUserStore = defineStore('userStore', {
     },
     actions: {
         async fetchUsers(page = 1, fields = []) {
-            console.log(fields);
             const message = useMessage();
             const loadingBar = useLoadingBar();
             try {
+                const fieldsParam = fields.join(','); // Concatenate fields with commas
                 const response = await axios.get('index.php?option=com_usersexport&task=users.findAll', {
                     params: {
                         page: page,
                         size: this.pagination.pageSize,
-                        fields: fields
+                        fields: fieldsParam
                     }
                 });
 
@@ -74,18 +79,18 @@ export const useUserStore = defineStore('userStore', {
             }
         },
 
-        async fetchAvailableFields(usersOnly = false) {
+        async fetchAvailableFields() {
             try {
-                const response = await axios.get('index.php?option=com_usersexport&task=users.getAvailableFields', {
-                    params: {
-                        usersOnly: usersOnly
-                    }
-                });
+                const response = await axios.get('index.php?option=com_usersexport&task=users.getAvailableFields');
                 this.availableFields = response.data; // Store fetched fields in state
             } catch (error) {
                 console.error("Error fetching available fields:", error);
                 throw error;
             }
+        },
+
+        setSelectedFields(fields) {
+            this.selectedFields = fields;
         },
 
         convertToCSV(data) {
