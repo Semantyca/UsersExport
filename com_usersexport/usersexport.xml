@@ -6,7 +6,7 @@
     <authorUrl>https://absolute.lv</authorUrl>
     <copyright>Nzimas</copyright>
     <license>GPL v3</license>
-    <version>0.0.3</version>
+    <version>0.0.4</version>
     <description>it helps to export user list</description>
 
     <namespace path="src">Semantyca\Component\Usersexport</namespace>
