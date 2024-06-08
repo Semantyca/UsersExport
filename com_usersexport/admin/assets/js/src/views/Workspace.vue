@@ -10,6 +10,8 @@
         <n-input size="large" v-model="searchQuery" placeholder="Search..." style="width: 400px;" />
         <n-date-picker size="large" v-model="dateRange" type="daterange" placeholder="Select date range" />
         <n-tree-select
+            filterable
+            clearable
             size="large"
             v-model="selectedColumns"
             multiple
