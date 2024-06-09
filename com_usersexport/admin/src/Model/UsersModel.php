@@ -12,7 +12,7 @@ class UsersModel extends BaseDatabaseModel
     public function getUsers($currentPage = 1, $itemsPerPage = 10, $fields = [], $search = '', $start = '', $end = ''): array
     {
         $db = $this->getDatabase();
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
         $offset = ($currentPage - 1) * $itemsPerPage;
 
         // Separate fields based on the table
@@ -124,7 +124,7 @@ class UsersModel extends BaseDatabaseModel
     private function getUserNotes($userId, $fields)
     {
         $db = $this->getDatabase();
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
 
         $query->select($fields)
             ->from($db->quoteName('#__user_notes', 'n'))
@@ -137,7 +137,7 @@ class UsersModel extends BaseDatabaseModel
     private function getUserGroups($userId, $fields)
     {
         $db = $this->getDatabase();
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
 
         $query->select($fields)
             ->from($db->quoteName('#__usergroups', 'g'))
@@ -151,7 +151,7 @@ class UsersModel extends BaseDatabaseModel
     private function getUserProfiles($userId, $fields)
     {
         $db = $this->getDatabase();
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
 
         $query->select($fields)
             ->from($db->quoteName('#__user_profiles', 'p'))
@@ -178,7 +178,7 @@ class UsersModel extends BaseDatabaseModel
             $prefix . 'usergroups'
         ];
 
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
 
         $query
             ->select([

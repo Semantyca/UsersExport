@@ -42,7 +42,7 @@ export const useUserStore = defineStore('userStore', () => {
 
     const getAvailableFields = computed(() => availableFields.value);
 
-    const getSelectedFields = computed(() => selectedFields.value.length > 0 ? selectedFields.value : defaultFields.value.children.map(field => field.key));
+    const getSelectedFields = computed(() => selectedFields.value);
 
     const getCsvData = computed(() => {
         const data = getCurrentPage.value;

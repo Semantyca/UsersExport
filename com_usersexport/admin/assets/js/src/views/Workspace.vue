@@ -2,19 +2,20 @@
   <n-card>
     <n-grid :cols="1" x-gap="12" y-gap="12" class="mt-1">
       <n-gi>
-        <n-h2>Users export</n-h2>
+        <n-h2>UsersExport</n-h2>
       </n-gi>
       <n-gi>
         <n-space>
           <n-button type="info" size="large" @click="toggleFilter">Filter</n-button>
+<!--          <n-button type="info" size="large" @click="resetFields">Reset</n-button>-->
           <n-button type="success" size="large" @click="togglePreview">Preview</n-button>
           <n-button type="primary" size="large" @click="exportCSV">Export CSV</n-button>
         </n-space>
       </n-gi>
       <n-gi>
         <n-collapse-transition :show="showFilter">
-          <n-grid :cols="10" x-gap="12">
-            <n-gi span="3">
+          <n-grid :cols="10" x-gap="12" responsive="screen">
+            <n-gi :span="3">
               <n-input size="large" v-model="searchQuery" placeholder="Search..." class="w-[25rem]"/>
             </n-gi>
             <n-gi span="2">
@@ -23,7 +24,7 @@
             </n-gi>
             <n-gi span="5">
               <n-tree-select
-                  :default-value="userStore.selectedFields"
+                  :default-value="userStore.defaultFields.children.map(field => field.key)"
                   filterable
                   size="large"
                   v-model="userStore.selectedFields"
@@ -38,15 +39,16 @@
               />
             </n-gi>
           </n-grid>
+
         </n-collapse-transition>
       </n-gi>
       <n-gi>
         <n-collapse-transition :show="showPreview">
-          <n-code :code="csvData" language="csv" :hljs="hljs" />
+          <n-code :code="csvData" language="csv" :hljs="hljs"/>
         </n-collapse-transition>
       </n-gi>
       <n-gi>
-<!--        <n-skeleton v-if="loading" text :repeat="5" class="data-table-skeleton" title height="30px"></n-skeleton>-->
+        <!--        <n-skeleton v-if="loading" text :repeat="5" class="data-table-skeleton" title height="30px"></n-skeleton>-->
         <n-data-table
             remote
             :columns="columns"
@@ -60,8 +62,8 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted, watch } from 'vue';
-import { useUserStore } from '../stores/userStore';
+import {defineComponent, ref, onMounted, watch} from 'vue';
+import {useUserStore} from '../stores/userStore';
 import hljs from 'highlight.js';
 import {
   NCard, NDataTable, NButton, NInput, NDatePicker, NTreeSelect,
@@ -98,7 +100,7 @@ export default defineComponent({
     const updateColumns = () => {
       const newColumns = userStore.selectedFields.map(field => {
         const column = field.split('.').pop();
-        return { title: column, key: column };
+        return {title: column, key: column};
       });
 
       // Only update columns that have changed
@@ -134,7 +136,7 @@ export default defineComponent({
     const exportCSV = () => {
       const data = userStore.getCurrentPage;
       const csv = convertToCSV(data);
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
@@ -178,6 +180,14 @@ export default defineComponent({
       fetchUsers(page, userStore.selectedFields);
     }
 
+    const resetFields = () => {
+      searchQuery.value = '';
+      dateRange.value = null;
+      userStore.selectedFields = userStore.defaultFields.children.map(field => field.key);
+      updateColumns();
+      fetchUsers(1, userStore.selectedFields);
+    };
+
     return {
       columns,
       userStore,
@@ -192,7 +202,8 @@ export default defineComponent({
       csvData,
       showPreview,
       hljs,
-      handleTreeSelectChange
+      handleTreeSelectChange,
+      resetFields
     };
   }
 });
