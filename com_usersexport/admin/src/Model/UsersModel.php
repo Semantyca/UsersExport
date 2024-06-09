@@ -9,7 +9,7 @@ use Joomla\CMS\MVC\Model\BaseDatabaseModel;
 
 class UsersModel extends BaseDatabaseModel
 {
-    public function getUsers($currentPage = 1, $itemsPerPage = 10, $fields = [])
+    public function getUsers($currentPage = 1, $itemsPerPage = 10, $fields = [], $search = '', $start = '', $end = ''): array
     {
         $db = $this->getDatabase();
         $query = $db->getQuery(true);
@@ -22,19 +22,19 @@ class UsersModel extends BaseDatabaseModel
         $groupFields = [];
 
         foreach ($fields as $field) {
-            if (strpos($field, '#__users.') === 0) {
+            if (str_starts_with($field, '#__users.')) {
                 $userFields[] = str_replace('#__users.', 'u.', $field);
-            } elseif (strpos($field, '#__user_profiles.') === 0) {
+            } elseif (str_starts_with($field, '#__user_profiles.')) {
                 $profileFields[] = str_replace('#__user_profiles.', 'p.', $field);
-            } elseif (strpos($field, '#__user_notes.') === 0) {
+            } elseif (str_starts_with($field, '#__user_notes.')) {
                 $noteFields[] = str_replace('#__user_notes.', 'n.', $field);
-            } elseif (strpos($field, '#__usergroups.') === 0) {
+            } elseif (str_starts_with($field, '#__usergroups.')) {
                 $groupFields[] = str_replace('#__usergroups.', 'g.', $field);
             }
         }
 
         // Ensure password field is masked if included
-        $userFields = array_map(function($field) {
+        $userFields = array_map(function ($field) {
             return ($field === 'u.password') ? 'REPEAT("*", 5) AS password' : $field;
         }, $userFields);
 
@@ -44,27 +44,78 @@ class UsersModel extends BaseDatabaseModel
             ->order('u.registerDate DESC')
             ->setLimit($itemsPerPage, $offset);
 
+        // Add search conditions
+        if (!empty($search)) {
+            $search = $db->quote('%' . $db->escape($search, true) . '%');
+            $query->where('u.name LIKE ' . $search . ' OR u.username LIKE ' . $search . ' OR u.email LIKE ' . $search);
+        }
+
+        // Add date range conditions
+        if (!empty($start)) {
+            $query->where('u.registerDate >= ' . $db->quote($start));
+        }
+        if (!empty($end)) {
+            $query->where('u.registerDate <= ' . $db->quote($end));
+        }
+
         $db->setQuery($query);
         $users = $db->loadObjectList();
 
         // Fetch and add notes, groups, and profiles information based on the requested fields
         foreach ($users as $user) {
-            $user->notes = $this->getUserNotes($user->id, $noteFields);
-            $user->groups = $this->getUserGroups($user->id, $groupFields);
-            $user->profiles = $this->getUserProfiles($user->id, $profileFields);
+            if (!empty($noteFields)) {
+                $userNotes = $this->getUserNotes($user->id, $noteFields);
+                foreach ($userNotes as $note) {
+                    foreach ($note as $key => $value) {
+                        $user->{$key} = $value;
+                    }
+                }
+            }
+
+            if (!empty($groupFields)) {
+                $userGroups = $this->getUserGroups($user->id, $groupFields);
+                foreach ($userGroups as $group) {
+                    foreach ($group as $key => $value) {
+                        $user->{$key} = $value;
+                    }
+                }
+            }
+
+            if (!empty($profileFields)) {
+                $userProfiles = $this->getUserProfiles($user->id, $profileFields);
+                foreach ($userProfiles as $profile) {
+                    foreach ($profile as $key => $value) {
+                        $user->{$key} = $value;
+                    }
+                }
+            }
         }
 
         // Count query
         $queryCount = $db->getQuery(true)
             ->select('COUNT(' . $db->quoteName('u.id') . ')')
             ->from($db->quoteName('#__users', 'u'));
+
+        // Add search conditions to count query
+        if (!empty($search)) {
+            $queryCount->where('u.name LIKE ' . $search . ' OR u.username LIKE ' . $search . ' OR u.email LIKE ' . $search);
+        }
+
+        // Add date range conditions to count query
+        if (!empty($start)) {
+            $queryCount->where('u.registerDate >= ' . $db->quote($start));
+        }
+        if (!empty($end)) {
+            $queryCount->where('u.registerDate <= ' . $db->quote($end));
+        }
+
         $db->setQuery($queryCount);
         $count = $db->loadResult();
-        $maxPage = (int) ceil($count / $itemsPerPage);
+        $maxPage = (int)ceil($count / $itemsPerPage);
 
         return [
-            'docs'    => $users,
-            'count'   => $count,
+            'docs' => $users,
+            'count' => $count,
             'current' => $currentPage,
             'maxPage' => $maxPage
         ];
@@ -72,15 +123,12 @@ class UsersModel extends BaseDatabaseModel
 
     private function getUserNotes($userId, $fields)
     {
-        if (empty($fields)) {
-            return [];
-        }
         $db = $this->getDatabase();
         $query = $db->getQuery(true);
 
         $query->select($fields)
             ->from($db->quoteName('#__user_notes', 'n'))
-            ->where($db->quoteName('n.user_id') . ' = ' . (int) $userId);
+            ->where($db->quoteName('n.user_id') . ' = ' . (int)$userId);
 
         $db->setQuery($query);
         return $db->loadObjectList();
@@ -88,16 +136,13 @@ class UsersModel extends BaseDatabaseModel
 
     private function getUserGroups($userId, $fields)
     {
-        if (empty($fields)) {
-            return [];
-        }
         $db = $this->getDatabase();
         $query = $db->getQuery(true);
 
         $query->select($fields)
             ->from($db->quoteName('#__usergroups', 'g'))
             ->join('INNER', $db->quoteName('#__user_usergroup_map', 'ugm') . ' ON ' . $db->quoteName('g.id') . ' = ' . $db->quoteName('ugm.group_id'))
-            ->where($db->quoteName('ugm.user_id') . ' = ' . (int) $userId);
+            ->where($db->quoteName('ugm.user_id') . ' = ' . (int)$userId);
 
         $db->setQuery($query);
         return $db->loadObjectList();
@@ -105,20 +150,16 @@ class UsersModel extends BaseDatabaseModel
 
     private function getUserProfiles($userId, $fields)
     {
-        if (empty($fields)) {
-            return [];
-        }
         $db = $this->getDatabase();
         $query = $db->getQuery(true);
 
         $query->select($fields)
             ->from($db->quoteName('#__user_profiles', 'p'))
-            ->where($db->quoteName('p.user_id') . ' = ' . (int) $userId);
+            ->where($db->quoteName('p.user_id') . ' = ' . (int)$userId);
 
         $db->setQuery($query);
         return $db->loadObjectList();
     }
-
 
     public function getAvailableFields(): array
     {
@@ -177,6 +218,4 @@ class UsersModel extends BaseDatabaseModel
 
         return $options;
     }
-
-
 }
