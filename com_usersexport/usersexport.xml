@@ -29,6 +29,6 @@
         </languages>
     </administration>
 
-    <scriptfile>admin/installer_script.php</scriptfile>
+    <scriptfile>admin/services/installer_script.php</scriptfile>
 
 </extension>

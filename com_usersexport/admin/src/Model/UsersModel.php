@@ -15,46 +15,27 @@ class UsersModel extends BaseDatabaseModel
         $query  = $db->getQuery(true);
         $offset = ($currentPage - 1) * $itemsPerPage;
 
-        // Ensure fields have the correct format
-        $fields = array_map(function($field) {
-        if ($field === '#__users.password') {
-            return 'REPEAT("*", 5) AS password';
-        }
-        $field = str_replace('#__users.', 'u.', $field);
-        return $field;
-        }, $fields);
+        // Ensure fields have the correct format and handle table aliases
+        $userFields = array_map(function($field) {
+            return ($field === '#__users.password') ? 'REPEAT("*", 5) AS password' : str_replace('#__users.', 'u.', $field);
+        }, array_filter($fields, function($field) {
+            return strpos($field, '#__users.') !== false;
+        }));
 
-        // Adding fields for notes and groups
-        $fields[] = "GROUP_CONCAT(DISTINCT n.subject SEPARATOR ', ') AS notes";
-        $fields[] = "GROUP_CONCAT(DISTINCT g.title SEPARATOR ', ') AS groups";
-
-        // Construct the select part of the query
-        $query->select($fields)
+        // Construct the select part of the query for users
+        $query->select($userFields)
             ->from($db->quoteName('#__users', 'u'))
-            ->leftJoin($db->quoteName('#__user_profiles', 'p') . ' ON ' . $db->quoteName('u.id') . ' = ' . $db->quoteName('p.user_id'))
-            ->leftJoin($db->quoteName('#__user_notes', 'n') . ' ON ' . $db->quoteName('u.id') . ' = ' . $db->quoteName('n.user_id'))
-            ->leftJoin($db->quoteName('#__user_usergroup_map', 'ugm') . ' ON ' . $db->quoteName('u.id') . ' = ' . $db->quoteName('ugm.user_id'))
-            ->leftJoin($db->quoteName('#__usergroups', 'g') . ' ON ' . $db->quoteName('ugm.group_id') . ' = ' . $db->quoteName('g.id'))
-            ->group([
-                'u.id',
-                'u.name',
-                'u.username',
-                'u.email',
-                'u.block',
-                'u.sendEmail',
-                'u.registerDate',
-                'u.lastvisitDate',
-                'u.activation',
-                'u.params',
-                'u.lastResetTime',
-                'u.resetCount',
-                'u.otpKey'
-            ])
             ->order('u.registerDate DESC')
             ->setLimit($itemsPerPage, $offset);
 
         $db->setQuery($query);
         $users = $db->loadObjectList();
+
+        // Add notes and groups information
+        foreach ($users as $user) {
+            $user->notes = $this->getUserNotes($user->id);
+            $user->groups = $this->getUserGroups($user->id);
+        }
 
         // Count query
         $queryCount = $db->getQuery(true)
@@ -71,6 +52,34 @@ class UsersModel extends BaseDatabaseModel
             'maxPage' => $maxPage
         ];
     }
+
+    private function getUserNotes($userId)
+    {
+        $db = $this->getDatabase();
+        $query = $db->getQuery(true);
+
+        $query->select('n.subject')
+            ->from($db->quoteName('#__user_notes', 'n'))
+            ->where($db->quoteName('n.user_id') . ' = ' . (int) $userId);
+
+        $db->setQuery($query);
+        return $db->loadColumn();
+    }
+
+    private function getUserGroups($userId)
+    {
+        $db = $this->getDatabase();
+        $query = $db->getQuery(true);
+
+        $query->select('g.title')
+            ->from($db->quoteName('#__usergroups', 'g'))
+            ->join('INNER', $db->quoteName('#__user_usergroup_map', 'ugm') . ' ON ' . $db->quoteName('g.id') . ' = ' . $db->quoteName('ugm.group_id'))
+            ->where($db->quoteName('ugm.user_id') . ' = ' . (int) $userId);
+
+        $db->setQuery($query);
+        return $db->loadColumn();
+    }
+
 
 
     public function getAvailableFields(): array

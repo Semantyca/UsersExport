@@ -23,7 +23,7 @@
             </n-gi>
             <n-gi span="5">
               <n-tree-select
-                  :default-value="userStore.defaultFields.children.map(field => field.key)"
+                  :default-value="userStore.selectedFields"
                   filterable
                   clearable
                   size="large"
@@ -32,9 +32,10 @@
                   check-strategy="child"
                   checkable
                   cascade
-                  :options="userStore.getAvailableFields"
+                  :options="userStore.availableFields"
                   placeholder="Select columns"
                   class="w-[25rem]"
+                  @update:value="handleTreeSelectChange"
               />
             </n-gi>
           </n-grid>
@@ -46,9 +47,8 @@
         </n-collapse-transition>
       </n-gi>
       <n-gi>
-        <n-skeleton text v-if="loading" class="data-table-skeleton" title height="30px"></n-skeleton>
+<!--        <n-skeleton v-if="loading" text :repeat="5" class="data-table-skeleton" title height="30px"></n-skeleton>-->
         <n-data-table
-            v-else
             remote
             :columns="columns"
             :data="userStore.getCurrentPage"
@@ -97,10 +97,15 @@ export default defineComponent({
     const showPreview = ref(false);
 
     const updateColumns = () => {
-      columns.value = userStore.getSelectedFields.map(field => {
-        const column = field.split('.').pop(); // Extract the field name
+      const newColumns = userStore.selectedFields.map(field => {
+        const column = field.split('.').pop();
         return { title: column, key: column };
       });
+
+      // Only update columns that have changed
+      if (JSON.stringify(columns.value) !== JSON.stringify(newColumns)) {
+        columns.value = newColumns;
+      }
     };
 
     const fetchUsers = async (page, fields) => {
@@ -153,19 +158,25 @@ export default defineComponent({
 
     onMounted(() => {
       fetchAvailableFields().then(() => {
-        userStore.setSelectedFields(userStore.defaultFields.children.map(field => field.key)); // Set default fields to selectedFields in the store
+        userStore.selectedFields = userStore.defaultFields.children.map(field => field.key);
         updateColumns();
-        fetchUsers(1, userStore.getSelectedFields);
+        fetchUsers(1, userStore.selectedFields);
       });
     });
 
-    watch(() => userStore.selectedFields, () => {
-      updateColumns();
-      fetchUsers(1, userStore.getSelectedFields);
+    watch(() => userStore.selectedFields, (newVal, oldVal) => {
+      if (newVal !== oldVal) {
+        updateColumns();
+        fetchUsers(1, userStore.selectedFields);
+      }
     });
 
+    const handleTreeSelectChange = (value) => {
+      userStore.selectedFields = value;
+    };
+
     function handlePageChange(page) {
-      fetchUsers(page, userStore.getSelectedFields);
+      fetchUsers(page, userStore.selectedFields);
     }
 
     return {
@@ -181,7 +192,8 @@ export default defineComponent({
       loading,
       csvData,
       showPreview,
-      hljs
+      hljs,
+      handleTreeSelectChange
     };
   }
 });

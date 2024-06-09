@@ -1,101 +1,119 @@
-import { defineStore } from "pinia";
-import axios from "axios";
+import { defineStore } from 'pinia';
+import axios from 'axios';
+import { ref, computed } from 'vue';
 import { useMessage, useLoadingBar } from 'naive-ui';
 
-export const useUserStore = defineStore('userStore', {
-    state: () => ({
-        userMap: new Map(),
-        pagination: {
-            page: 1,
-            pageSize: 5,
-            count: 0,
-            pageCount: 1
-        },
-        availableFields: [],
-        defaultFields: {
-            label: "users",
-            key: "#__users",
-            children: [
-                { label: 'id', key: '#__users.id' },
-                { label: 'name', key: '#__users.name' },
-                { label: 'username', key: '#__users.username' },
-                { label: 'email', key: '#__users.email' },
-                { label: 'registerDate', key: '#__users.registerDate' }
-            ]
-        },
-        selectedFields: [] // Add selectedFields to the state
-    }),
-    getters: {
-        getPagination() {
-            return {
-                page: this.pagination.page,
-                pageSize: this.pagination.pageSize,
-                itemCount: this.pagination.count,
-                pageCount: this.pagination.pageCount,
-                size: 'large'
-            };
-        },
-        getCurrentPage() {
-            const pageData = this.userMap.get(this.pagination.page);
-            return pageData ? pageData.docs : [];
-        },
-        getAvailableFields() {
-            //TODO redundant
-            return this.availableFields.data;
-        },
-        getSelectedFields() {
-            return this.selectedFields;
-        },
-        getCsvData() {
-            const data = this.getCurrentPage;
-            return data.length ? this.convertToCSV(data) : '';
-        }
-    },
-    actions: {
-        async fetchUsers(page = 1, fields = []) {
-            const message = useMessage();
-            const loadingBar = useLoadingBar();
-            try {
-                const fieldsParam = fields.join(','); // Concatenate fields with commas
-                const response = await axios.get('index.php?option=com_usersexport&task=users.findAll', {
-                    params: {
-                        page: page,
-                        size: this.pagination.pageSize,
-                        fields: fieldsParam
-                    }
-                });
+export const useUserStore = defineStore('userStore', () => {
+    const message = useMessage();
+    const loadingBar = useLoadingBar();
+    const userMap = ref(new Map());
+    const pagination = ref({
+        page: 1,
+        pageSize: 5,
+        count: 0,
+        pageCount: 1
+    });
+    const availableFields = ref([]);
+    const defaultFields = ref({
+        label: 'users',
+        key: '#__users',
+        children: [
+            { label: 'id', key: '#__users.id' },
+            { label: 'name', key: '#__users.name' },
+            { label: 'username', key: '#__users.username' },
+            { label: 'email', key: '#__users.email' },
+            { label: 'registerDate', key: '#__users.registerDate' }
+        ]
+    });
+    const selectedFields = ref([]);
 
-                const pageObj = response.data;
-                if (pageObj && pageObj.data) {
-                    const { docs, count, maxPage, current } = pageObj.data;
-                    this.pagination.page = current;
-                    this.pagination.count = count;
-                    this.pagination.pageCount = maxPage;
-                    this.userMap.set(page, { docs });
+    const getPagination = computed(() => ({
+        page: pagination.value.page,
+        pageSize: pagination.value.pageSize,
+        itemCount: pagination.value.count,
+        pageCount: pagination.value.pageCount,
+        size: 'large'
+    }));
+
+    const getCurrentPage = computed(() => {
+        const pageData = userMap.value.get(pagination.value.page);
+        return pageData ? pageData.docs : [];
+    });
+
+    const getAvailableFields = computed(() => availableFields.value);
+
+    const getSelectedFields = computed(() => selectedFields.value.length > 0 ? selectedFields.value : defaultFields.value.children.map(field => field.key));
+
+    const getCsvData = computed(() => {
+        const data = getCurrentPage.value;
+        return data.length ? convertToCSV(data) : '';
+    });
+
+    const fetchUsers = async (page = 1, fields = []) => {
+        try {
+            loadingBar.start();
+            let fieldsParam;
+            if (fields.length > 0) {
+                fieldsParam = fields.join(',');
+            } else {
+                fieldsParam = defaultFields.value.children.map(field => field.key).join(',');
+                message.info('No fields selected, using default fields.');
+            }
+
+            const response = await axios.get('index.php?option=com_usersexport&task=users.findAll', {
+                params: {
+                    page,
+                    size: pagination.value.pageSize,
+                    fields: fieldsParam
                 }
-            } catch (error) {
-                message.error("Error fetching users: " + error.message);
-                console.error("Error fetching users:", error);
+            });
+
+            const pageObj = response.data;
+            if (pageObj && pageObj.data) {
+                const { docs, count, maxPage, current } = pageObj.data;
+                pagination.value.page = current;
+                pagination.value.count = count;
+                pagination.value.pageCount = maxPage;
+                userMap.value.set(page, { docs });
             }
-        },
-
-        async fetchAvailableFields() {
-            try {
-                const response = await axios.get('index.php?option=com_usersexport&task=users.getAvailableFields');
-                this.availableFields = response.data; // Store fetched fields in state
-            } catch (error) {
-                console.error("Error fetching available fields:", error);
-                throw error;
-            }
-        },
-
-        setSelectedFields(fields) {
-            this.selectedFields = fields;
-        },
-
-        convertToCSV(data) {
-            const array = [Object.keys(data[0])].concat(data);
-            return array.map(row => Object.values(row).map(value => `"${value}"`).join(',')).join('\n');
+            loadingBar.finish();
+        } catch (error) {
+            loadingBar.error();
+            message.error('Error fetching users: ' + error.message);
+            console.error('Error fetching users:', error);
         }
-    }
+    };
+
+    const fetchAvailableFields = async () => {
+        try {
+            const response = await axios.get('index.php?option=com_usersexport&task=users.getAvailableFields');
+            const pageObj = response.data;
+            availableFields.value = pageObj.data;
+        } catch (error) {
+            message.error('Error fetching available fields: ' + error.message);
+            console.error('Error fetching available fields:', error);
+            throw error;
+        }
+    };
+
+    const convertToCSV = (data) => {
+        const array = [Object.keys(data[0])].concat(data);
+        return array.map(row => Object.values(row).map(value => `"${value}"`).join(',')).join('\n');
+    };
+
+    return {
+        userMap,
+        pagination,
+        availableFields,
+        defaultFields,
+        selectedFields,
+        getPagination,
+        getCurrentPage,
+        getAvailableFields,
+        getSelectedFields,
+        getCsvData,
+        fetchUsers,
+        fetchAvailableFields,
+        convertToCSV
+    };
 });
