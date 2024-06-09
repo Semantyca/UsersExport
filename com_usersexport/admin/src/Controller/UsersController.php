@@ -19,9 +19,11 @@ class UsersController extends BaseController
         {
             $currentPage  = $this->input->getInt('page', 1);
             $itemsPerPage = $this->input->getInt('size', 5);
-            $fields       = $this->input->get('fields', [], 'array');
+            $fieldsString = $this->input->get('fields', '', 'string'); // Changed to 'string' type
 
-            $model  = $this->getModel('Users', 'Administrator', ['ignore_request' => true]);
+            $fields = array_map('trim', explode(',', $fieldsString));
+
+            $model = $this->getModel('Users', 'Administrator', ['ignore_request' => true]);
 
             $users = $model->getUsers($currentPage, $itemsPerPage, $fields);
 
@@ -37,6 +39,7 @@ class UsersController extends BaseController
             $app->close();
         }
     }
+
 
     public function getAvailableFields()
     {

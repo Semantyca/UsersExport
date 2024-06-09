@@ -25,7 +25,6 @@
               <n-tree-select
                   :default-value="userStore.selectedFields"
                   filterable
-                  clearable
                   size="large"
                   v-model="userStore.selectedFields"
                   multiple

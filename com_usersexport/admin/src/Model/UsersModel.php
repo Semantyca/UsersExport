@@ -11,16 +11,32 @@ class UsersModel extends BaseDatabaseModel
 {
     public function getUsers($currentPage = 1, $itemsPerPage = 10, $fields = [])
     {
-        $db     = $this->getDatabase();
-        $query  = $db->getQuery(true);
+        $db = $this->getDatabase();
+        $query = $db->getQuery(true);
         $offset = ($currentPage - 1) * $itemsPerPage;
 
-        // Ensure fields have the correct format and handle table aliases
+        // Separate fields based on the table
+        $userFields = [];
+        $profileFields = [];
+        $noteFields = [];
+        $groupFields = [];
+
+        foreach ($fields as $field) {
+            if (strpos($field, '#__users.') === 0) {
+                $userFields[] = str_replace('#__users.', 'u.', $field);
+            } elseif (strpos($field, '#__user_profiles.') === 0) {
+                $profileFields[] = str_replace('#__user_profiles.', 'p.', $field);
+            } elseif (strpos($field, '#__user_notes.') === 0) {
+                $noteFields[] = str_replace('#__user_notes.', 'n.', $field);
+            } elseif (strpos($field, '#__usergroups.') === 0) {
+                $groupFields[] = str_replace('#__usergroups.', 'g.', $field);
+            }
+        }
+
+        // Ensure password field is masked if included
         $userFields = array_map(function($field) {
-            return ($field === '#__users.password') ? 'REPEAT("*", 5) AS password' : str_replace('#__users.', 'u.', $field);
-        }, array_filter($fields, function($field) {
-            return strpos($field, '#__users.') !== false;
-        }));
+            return ($field === 'u.password') ? 'REPEAT("*", 5) AS password' : $field;
+        }, $userFields);
 
         // Construct the select part of the query for users
         $query->select($userFields)
@@ -31,10 +47,11 @@ class UsersModel extends BaseDatabaseModel
         $db->setQuery($query);
         $users = $db->loadObjectList();
 
-        // Add notes and groups information
+        // Fetch and add notes, groups, and profiles information based on the requested fields
         foreach ($users as $user) {
-            $user->notes = $this->getUserNotes($user->id);
-            $user->groups = $this->getUserGroups($user->id);
+            $user->notes = $this->getUserNotes($user->id, $noteFields);
+            $user->groups = $this->getUserGroups($user->id, $groupFields);
+            $user->profiles = $this->getUserProfiles($user->id, $profileFields);
         }
 
         // Count query
@@ -42,7 +59,7 @@ class UsersModel extends BaseDatabaseModel
             ->select('COUNT(' . $db->quoteName('u.id') . ')')
             ->from($db->quoteName('#__users', 'u'));
         $db->setQuery($queryCount);
-        $count   = $db->loadResult();
+        $count = $db->loadResult();
         $maxPage = (int) ceil($count / $itemsPerPage);
 
         return [
@@ -53,33 +70,54 @@ class UsersModel extends BaseDatabaseModel
         ];
     }
 
-    private function getUserNotes($userId)
+    private function getUserNotes($userId, $fields)
     {
+        if (empty($fields)) {
+            return [];
+        }
         $db = $this->getDatabase();
         $query = $db->getQuery(true);
 
-        $query->select('n.subject')
+        $query->select($fields)
             ->from($db->quoteName('#__user_notes', 'n'))
             ->where($db->quoteName('n.user_id') . ' = ' . (int) $userId);
 
         $db->setQuery($query);
-        return $db->loadColumn();
+        return $db->loadObjectList();
     }
 
-    private function getUserGroups($userId)
+    private function getUserGroups($userId, $fields)
     {
+        if (empty($fields)) {
+            return [];
+        }
         $db = $this->getDatabase();
         $query = $db->getQuery(true);
 
-        $query->select('g.title')
+        $query->select($fields)
             ->from($db->quoteName('#__usergroups', 'g'))
             ->join('INNER', $db->quoteName('#__user_usergroup_map', 'ugm') . ' ON ' . $db->quoteName('g.id') . ' = ' . $db->quoteName('ugm.group_id'))
             ->where($db->quoteName('ugm.user_id') . ' = ' . (int) $userId);
 
         $db->setQuery($query);
-        return $db->loadColumn();
+        return $db->loadObjectList();
     }
 
+    private function getUserProfiles($userId, $fields)
+    {
+        if (empty($fields)) {
+            return [];
+        }
+        $db = $this->getDatabase();
+        $query = $db->getQuery(true);
+
+        $query->select($fields)
+            ->from($db->quoteName('#__user_profiles', 'p'))
+            ->where($db->quoteName('p.user_id') . ' = ' . (int) $userId);
+
+        $db->setQuery($query);
+        return $db->loadObjectList();
+    }
 
 
     public function getAvailableFields(): array
