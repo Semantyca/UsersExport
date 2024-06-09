@@ -42,7 +42,7 @@
       </n-gi>
       <n-gi>
         <n-collapse-transition :show="showPreview">
-          <n-code :code="csvData" language="csv" />
+          <n-code :code="csvData" language="csv" :hljs="hljs" />
         </n-collapse-transition>
       </n-gi>
       <n-gi>
@@ -63,6 +63,7 @@
 <script>
 import { defineComponent, ref, onMounted, watch } from 'vue';
 import { useUserStore } from '../stores/userStore';
+import hljs from 'highlight.js';
 import {
   NCard, NDataTable, NButton, NInput, NDatePicker, NTreeSelect,
   NSkeleton, NGrid, NGi, NH2, NH4, NSpace, NCollapseTransition, NCode
@@ -179,7 +180,8 @@ export default defineComponent({
       exportCSV,
       loading,
       csvData,
-      showPreview
+      showPreview,
+      hljs
     };
   }
 });
