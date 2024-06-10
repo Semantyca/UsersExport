@@ -26,6 +26,9 @@ export const useUserStore = defineStore('userStore', () => {
         ]
     });
     const selectedFields = ref([]);
+    const search = ref('');
+    const start = ref('');
+    const end = ref('');
 
     const getPagination = computed(() => ({
         page: pagination.value.page,
@@ -49,7 +52,7 @@ export const useUserStore = defineStore('userStore', () => {
         return data.length ? convertToCSV(data) : '';
     });
 
-    const fetchUsers = async (page = 1, fields = []) => {
+    const fetchUsers = async (page = 1, fields = [], searchValue = '', startDate = '', endDate = '') => {
         try {
             loadingBar.start();
             let fieldsParam;
@@ -64,7 +67,10 @@ export const useUserStore = defineStore('userStore', () => {
                 params: {
                     page,
                     size: pagination.value.pageSize,
-                    fields: fieldsParam
+                    fields: fieldsParam,
+                    search: searchValue,
+                    start: startDate,
+                    end: endDate
                 }
             });
 
@@ -107,6 +113,9 @@ export const useUserStore = defineStore('userStore', () => {
         availableFields,
         defaultFields,
         selectedFields,
+        search,
+        start,
+        end,
         getPagination,
         getCurrentPage,
         getAvailableFields,

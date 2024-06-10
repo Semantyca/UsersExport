@@ -1,5 +1,4 @@
 <?php
-
 namespace Semantyca\Component\Usersexport\Administrator\Controller;
 
 defined('_JEXEC') or die;
@@ -11,7 +10,11 @@ use Exception;
 
 class UsersController extends BaseController
 {
-    public function findAll()
+    /**
+     * @throws Exception
+     * @since 1.0
+     */
+    public function findAll(): void
     {
         $app = Factory::getApplication();
         header('Content-Type: application/json');
@@ -19,13 +22,19 @@ class UsersController extends BaseController
         {
             $currentPage  = $this->input->getInt('page', 1);
             $itemsPerPage = $this->input->getInt('size', 5);
-            $fieldsString = $this->input->get('fields', '', 'string'); // Changed to 'string' type
+            $fieldsString = $this->input->get('fields', '', 'string');
+            $search       = $this->input->getString('search', '');
+            $start        = $this->input->getString('start', '');
+            $end          = $this->input->getString('end', '');
+
+            $startDate = !empty($start) ? date('Y-m-d', $start / 1000) : '';
+            $endDate = !empty($end) ? date('Y-m-d', $end / 1000) : '';
 
             $fields = array_map('trim', explode(',', $fieldsString));
 
             $model = $this->getModel('Users', 'Administrator', ['ignore_request' => true]);
 
-            $users = $model->getUsers($currentPage, $itemsPerPage, $fields);
+            $users = $model->getUsers($currentPage, $itemsPerPage, $fields, $search, $startDate, $endDate);
 
             echo new JsonResponse($users);
         }
@@ -40,8 +49,11 @@ class UsersController extends BaseController
         }
     }
 
-
-    public function getAvailableFields()
+    /**
+     * @throws Exception
+     * @since 1.0
+     */
+    public function getAvailableFields(): void
     {
         $app = Factory::getApplication();
         header('Content-Type: application/json');

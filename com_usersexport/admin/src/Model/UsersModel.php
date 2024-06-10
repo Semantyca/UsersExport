@@ -15,7 +15,6 @@ class UsersModel extends BaseDatabaseModel
         $query = $db->createQuery();
         $offset = ($currentPage - 1) * $itemsPerPage;
 
-        // Separate fields based on the table
         $userFields = [];
         $profileFields = [];
         $noteFields = [];
@@ -33,24 +32,20 @@ class UsersModel extends BaseDatabaseModel
             }
         }
 
-        // Ensure password field is masked if included
         $userFields = array_map(function ($field) {
             return ($field === 'u.password') ? 'REPEAT("*", 5) AS password' : $field;
         }, $userFields);
 
-        // Construct the select part of the query for users
         $query->select($userFields)
             ->from($db->quoteName('#__users', 'u'))
             ->order('u.registerDate DESC')
             ->setLimit($itemsPerPage, $offset);
 
-        // Add search conditions
         if (!empty($search)) {
             $search = $db->quote('%' . $db->escape($search, true) . '%');
             $query->where('u.name LIKE ' . $search . ' OR u.username LIKE ' . $search . ' OR u.email LIKE ' . $search);
         }
 
-        // Add date range conditions
         if (!empty($start)) {
             $query->where('u.registerDate >= ' . $db->quote($start));
         }
@@ -61,7 +56,6 @@ class UsersModel extends BaseDatabaseModel
         $db->setQuery($query);
         $users = $db->loadObjectList();
 
-        // Fetch and add notes, groups, and profiles information based on the requested fields
         foreach ($users as $user) {
             if (!empty($noteFields)) {
                 $userNotes = $this->getUserNotes($user->id, $noteFields);
@@ -91,17 +85,14 @@ class UsersModel extends BaseDatabaseModel
             }
         }
 
-        // Count query
         $queryCount = $db->getQuery(true)
             ->select('COUNT(' . $db->quoteName('u.id') . ')')
             ->from($db->quoteName('#__users', 'u'));
 
-        // Add search conditions to count query
         if (!empty($search)) {
             $queryCount->where('u.name LIKE ' . $search . ' OR u.username LIKE ' . $search . ' OR u.email LIKE ' . $search);
         }
 
-        // Add date range conditions to count query
         if (!empty($start)) {
             $queryCount->where('u.registerDate >= ' . $db->quote($start));
         }

@@ -22,9 +22,17 @@ const plugins = [
     }),
     new WebpackManifestPlugin({
         fileName: 'manifest.json',
-        publicPath: '', // You can set your public path here
+        publicPath: '',
         writeToFileEmit: true,
     }),
+    function() {
+        this.hooks.done.tap('BuildInfoPlugin', (stats) => {
+            console.log('Build complete.');
+            console.log('Assets generated:');
+            const assets = stats.toJson().assets.map(asset => asset.name);
+            assets.forEach(asset => console.log(asset));
+        });
+    }
 ];
 
 console.log('Output directory:', path.resolve(__dirname, outputDir));
@@ -69,15 +77,5 @@ module.exports = {
             "fs": false,
             "path": require.resolve("path-browserify"),
         }
-    },
-    plugins: plugins.concat([
-        function() {
-            this.hooks.done.tap('BuildInfoPlugin', (stats) => {
-                console.log('Build complete.');
-                console.log('Assets generated:');
-                const assets = stats.toJson().assets.map(asset => asset.name);
-                assets.forEach(asset => console.log(asset));
-            });
-        }
-    ])
+    }
 };
