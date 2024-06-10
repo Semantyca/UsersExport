@@ -1,16 +1,33 @@
-const {VueLoaderPlugin} = require('vue-loader');
+const { VueLoaderPlugin } = require('vue-loader');
 const webpack = require('webpack');
-const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const path = require('path');
-const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
+const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 
 require('dotenv').config();
 
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('__dirname: ', __dirname);
 
-const outputDir = process.env.BUILD_OUTPUT_DIR;
+const outputDir = process.env.BUILD_OUTPUT_DIR || 'dist';
 const isProduction = process.env.NODE_ENV === 'production';
+
+const plugins = [
+    new VueLoaderPlugin(),
+    new CleanWebpackPlugin(),
+    new webpack.DefinePlugin({
+        __VUE_OPTIONS_API__: JSON.stringify(true),
+        __VUE_PROD_DEVTOOLS__: JSON.stringify(false),
+        __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: JSON.stringify(false)
+    }),
+    new WebpackManifestPlugin({
+        fileName: 'manifest.json',
+        publicPath: '', // You can set your public path here
+        writeToFileEmit: true,
+    }),
+];
+
+console.log('Output directory:', path.resolve(__dirname, outputDir));
 
 module.exports = {
     optimization: {
@@ -22,7 +39,7 @@ module.exports = {
     entry: path.resolve(__dirname, 'src/main.js'),
     output: {
         path: path.resolve(__dirname, outputDir),
-        filename: 'bundle-[fullhash].js'
+        filename: 'bundle-[fullhash].js',
     },
     watch: process.env.NODE_ENV === 'development',
     watchOptions: {
@@ -42,20 +59,7 @@ module.exports = {
             },
         ],
     },
-    plugins: [
-        new VueLoaderPlugin(),
-        new CleanWebpackPlugin(),
-        new webpack.DefinePlugin({
-            __VUE_OPTIONS_API__: JSON.stringify(true),
-            __VUE_PROD_DEVTOOLS__: JSON.stringify(false),
-            __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: JSON.stringify(false)
-        }),
-        new BundleAnalyzerPlugin({
-            analyzerMode: 'static',
-            reportFilename: path.resolve(__dirname, 'bundle-report.html'),
-            openAnalyzer: false,
-        }),
-    ],
+    plugins: plugins,
     resolve: {
         alias: {
             vue$: 'vue/dist/vue.esm-bundler.js',
@@ -66,4 +70,14 @@ module.exports = {
             "path": require.resolve("path-browserify"),
         }
     },
+    plugins: plugins.concat([
+        function() {
+            this.hooks.done.tap('BuildInfoPlugin', (stats) => {
+                console.log('Build complete.');
+                console.log('Assets generated:');
+                const assets = stats.toJson().assets.map(asset => asset.name);
+                assets.forEach(asset => console.log(asset));
+            });
+        }
+    ])
 };
