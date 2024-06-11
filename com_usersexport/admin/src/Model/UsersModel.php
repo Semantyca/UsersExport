@@ -244,11 +244,11 @@ class UsersModel extends BaseDatabaseModel
         }
 
         $customQuery = $db->getQuery(true);
-        $customQuery->select($db->quoteName('smtc_fields.name', 'field_name'))
-            ->from($db->quoteName('#__users', 'smtc_users'))
-            ->leftJoin($db->quoteName('#__fields_values', 'smtc_fields_values') . ' ON ' . $db->quoteName('smtc_users.id') . ' = ' . $db->quoteName('smtc_fields_values.item_id'))
-            ->leftJoin($db->quoteName('#__fields', 'smtc_fields') . ' ON ' . $db->quoteName('smtc_fields.id') . ' = ' . $db->quoteName('smtc_fields_values.field_id'))
-            ->where($db->quoteName('smtc_fields.context') . ' = ' . $db->quote('com_users.user'));
+        $customQuery->select($db->quoteName('#__fields.name', 'field_name'))
+            ->from($db->quoteName('#__users', '#__users'))
+            ->leftJoin($db->quoteName('#__fields_values', '#__fields_values') . ' ON ' . $db->quoteName('#__users.id') . ' = ' . $db->quoteName('#__fields_values.item_id'))
+            ->leftJoin($db->quoteName('#__fields', '#__fields') . ' ON ' . $db->quoteName('#__fields.id') . ' = ' . $db->quoteName('#__fields_values.field_id'))
+            ->where($db->quoteName('#__fields.context') . ' = ' . $db->quote('com_users.user'));
 
         $db->setQuery($customQuery);
         $customFields = $db->loadObjectList();
