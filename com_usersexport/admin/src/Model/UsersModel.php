@@ -12,7 +12,7 @@ class UsersModel extends BaseDatabaseModel
     public function getUsers($currentPage = 1, $itemsPerPage = 10, $fields = [], $search = '', $start = '', $end = ''): array
     {
         $db = $this->getDatabase();
-        $query = $db->createQuery();
+        $query = $db->getQuery(true);
         $offset = ($currentPage - 1) * $itemsPerPage;
 
         $userFields = [];
@@ -129,7 +129,7 @@ class UsersModel extends BaseDatabaseModel
     private function getUserCustomFields($userId, $fields)
     {
         $db = $this->getDatabase();
-        $query = $db->createQuery();
+        $query = $db->getQuery(true);
 
         $query->select(['cf.name AS field_name', 'cfv.value AS field_value'])
             ->from($db->quoteName('#__fields_values', 'cfv'))
@@ -153,7 +153,7 @@ class UsersModel extends BaseDatabaseModel
     private function getUserNotes($userId, $fields)
     {
         $db = $this->getDatabase();
-        $query = $db->createQuery();
+        $query = $db->getQuery(true);
 
         $query->select($fields)
             ->from($db->quoteName('#__user_notes', 'n'))
@@ -166,7 +166,7 @@ class UsersModel extends BaseDatabaseModel
     private function getUserGroups($userId, $fields)
     {
         $db = $this->getDatabase();
-        $query = $db->createQuery();
+        $query = $db->getQuery(true);
 
         $query->select($fields)
             ->from($db->quoteName('#__usergroups', 'g'))
@@ -180,7 +180,7 @@ class UsersModel extends BaseDatabaseModel
     private function getUserProfiles($userId, $fields)
     {
         $db = $this->getDatabase();
-        $query = $db->createQuery();
+        $query = $db->getQuery(true);
 
         $query->select($fields)
             ->from($db->quoteName('#__user_profiles', 'p'))
