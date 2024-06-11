@@ -19,38 +19,44 @@ class UsersModel extends BaseDatabaseModel
         $profileFields = [];
         $noteFields = [];
         $groupFields = [];
+        $customFields = [];
 
         foreach ($fields as $field) {
             if (str_starts_with($field, '#__users.')) {
-                $userFields[] = str_replace('#__users.', 'u.', $field);
+                $userFields[] = $field;
             } elseif (str_starts_with($field, '#__user_profiles.')) {
-                $profileFields[] = str_replace('#__user_profiles.', 'p.', $field);
+                $profileFields[] = $field;
             } elseif (str_starts_with($field, '#__user_notes.')) {
-                $noteFields[] = str_replace('#__user_notes.', 'n.', $field);
+                $noteFields[] = $field;
             } elseif (str_starts_with($field, '#__usergroups.')) {
-                $groupFields[] = str_replace('#__usergroups.', 'g.', $field);
+                $groupFields[] = $field;
+            } elseif (str_starts_with($field, 'custom.')) {
+                $customFields[] = $field;
             }
         }
 
         $userFields = array_map(function ($field) {
-            return ($field === 'u.password') ? 'REPEAT("*", 5) AS password' : $field;
+            return ($field === '#__users.password') ? 'REPEAT("*", 5) AS password' : $field;
         }, $userFields);
 
         $query->select($userFields)
-            ->from($db->quoteName('#__users', 'u'))
-            ->order('u.registerDate DESC')
-            ->setLimit($itemsPerPage, $offset);
+            ->from($db->quoteName('#__users'))
+            ->order('registerDate DESC');
 
         if (!empty($search)) {
             $search = $db->quote('%' . $db->escape($search, true) . '%');
-            $query->where('u.name LIKE ' . $search . ' OR u.username LIKE ' . $search . ' OR u.email LIKE ' . $search);
+            $query->where('name LIKE ' . $search . ' OR username LIKE ' . $search . ' OR email LIKE ' . $search);
         }
 
         if (!empty($start)) {
-            $query->where('u.registerDate >= ' . $db->quote($start));
+            $query->where('registerDate >= ' . $db->quote($start));
         }
         if (!empty($end)) {
-            $query->where('u.registerDate <= ' . $db->quote($end));
+            $query->where('registerDate <= ' . $db->quote($end));
+        }
+
+        if ($itemsPerPage > 0) {
+            $query->setLimit($itemsPerPage, $offset);
         }
 
         $db->setQuery($query);
@@ -83,26 +89,33 @@ class UsersModel extends BaseDatabaseModel
                     }
                 }
             }
+
+            if (!empty($customFields)) {
+                $userCustomFields = $this->getUserCustomFields($user->id, $customFields);
+                foreach ($userCustomFields as $key => $value) {
+                    $user->{$key} = $value;
+                }
+            }
         }
 
         $queryCount = $db->getQuery(true)
-            ->select('COUNT(' . $db->quoteName('u.id') . ')')
-            ->from($db->quoteName('#__users', 'u'));
+            ->select('COUNT(' . $db->quoteName('#__users.id') . ')')
+            ->from($db->quoteName('#__users'));
 
         if (!empty($search)) {
-            $queryCount->where('u.name LIKE ' . $search . ' OR u.username LIKE ' . $search . ' OR u.email LIKE ' . $search);
+            $queryCount->where('#__users.name LIKE ' . $search . ' OR #__users.username LIKE ' . $search . ' OR #__users.email LIKE ' . $search);
         }
 
         if (!empty($start)) {
-            $queryCount->where('u.registerDate >= ' . $db->quote($start));
+            $queryCount->where('#__users.registerDate >= ' . $db->quote($start));
         }
         if (!empty($end)) {
-            $queryCount->where('u.registerDate <= ' . $db->quote($end));
+            $queryCount->where('#__users.registerDate <= ' . $db->quote($end));
         }
 
         $db->setQuery($queryCount);
         $count = $db->loadResult();
-        $maxPage = (int)ceil($count / $itemsPerPage);
+        $maxPage = ($itemsPerPage > 0) ? (int)ceil($count / $itemsPerPage) : 1;
 
         return [
             'docs' => $users,
@@ -111,6 +124,31 @@ class UsersModel extends BaseDatabaseModel
             'maxPage' => $maxPage
         ];
     }
+
+
+    private function getUserCustomFields($userId, $fields)
+    {
+        $db = $this->getDatabase();
+        $query = $db->createQuery();
+
+        $query->select(['cf.name AS field_name', 'cfv.value AS field_value'])
+            ->from($db->quoteName('#__fields_values', 'cfv'))
+            ->join('INNER', $db->quoteName('#__fields', 'cf') . ' ON ' . $db->quoteName('cf.id') . ' = ' . $db->quoteName('cfv.field_id'))
+            ->where($db->quoteName('cfv.item_id') . ' = ' . (int)$userId);
+
+        $db->setQuery($query);
+        $customFields = $db->loadObjectList();
+
+        $result = [];
+        foreach ($customFields as $customField) {
+            //if (in_array($customField->field_name, $fields)) {
+                $result[$customField->field_name] = $customField->field_value;
+            //}
+        }
+
+        return $result;
+    }
+
 
     private function getUserNotes($userId, $fields)
     {
@@ -156,12 +194,10 @@ class UsersModel extends BaseDatabaseModel
     {
         $db = $this->getDatabase();
         $app = Factory::getApplication();
-        $dbName = $app->get('db'); // Get the database name from Joomla configuration
+        $dbName = $app->get('db');
 
-        // Get the table prefix
         $prefix = $app->get('dbprefix');
 
-        // Replace #__ with the actual table prefix
         $tables = [
             $prefix . 'users',
             $prefix . 'user_profiles',
@@ -169,7 +205,7 @@ class UsersModel extends BaseDatabaseModel
             $prefix . 'usergroups'
         ];
 
-        $query = $db->createQuery();
+        $query = $db->getQuery(true);
 
         $query
             ->select([
@@ -188,8 +224,8 @@ class UsersModel extends BaseDatabaseModel
         $tables = [];
 
         foreach ($columns as $column) {
-            $tableNameWithPrefix = str_replace($prefix, '#__', $column->TABLE_NAME); // Replace actual prefix with #__
-            $tableNameWithoutPrefix = str_replace($prefix, '', $column->TABLE_NAME); // Remove the actual prefix for label
+            $tableNameWithPrefix = str_replace($prefix, '#__', $column->TABLE_NAME);
+            $tableNameWithoutPrefix = str_replace($prefix, '', $column->TABLE_NAME);
             if (!isset($tables[$tableNameWithPrefix])) {
                 $tables[$tableNameWithPrefix] = [
                     'label' => $tableNameWithoutPrefix,
@@ -206,6 +242,31 @@ class UsersModel extends BaseDatabaseModel
         foreach ($tables as $table) {
             $options[] = $table;
         }
+
+        $customQuery = $db->getQuery(true);
+        $customQuery->select($db->quoteName('smtc_fields.name', 'field_name'))
+            ->from($db->quoteName('#__users', 'smtc_users'))
+            ->leftJoin($db->quoteName('#__fields_values', 'smtc_fields_values') . ' ON ' . $db->quoteName('smtc_users.id') . ' = ' . $db->quoteName('smtc_fields_values.item_id'))
+            ->leftJoin($db->quoteName('#__fields', 'smtc_fields') . ' ON ' . $db->quoteName('smtc_fields.id') . ' = ' . $db->quoteName('smtc_fields_values.field_id'))
+            ->where($db->quoteName('smtc_fields.context') . ' = ' . $db->quote('com_users.user'));
+
+        $db->setQuery($customQuery);
+        $customFields = $db->loadObjectList();
+
+        $customFieldOptions = [
+            'label' => 'Custom Fields',
+            'key' => 'custom',
+            'children' => []
+        ];
+
+        foreach ($customFields as $field) {
+            $customFieldOptions['children'][] = [
+                'label' => $field->field_name,
+                'key' => 'custom.' . $field->field_name
+            ];
+        }
+
+        $options[] = $customFieldOptions;
 
         return $options;
     }
