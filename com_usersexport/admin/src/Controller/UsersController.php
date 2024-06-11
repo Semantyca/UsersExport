@@ -38,7 +38,7 @@ class UsersController extends BaseController
 
             echo new JsonResponse($users);
         }
-        catch (Exception $e)
+        catch (\Throwable $e)
         {
             http_response_code(500);
             echo new JsonResponse($e->getMessage(), 'error', true);
@@ -63,7 +63,7 @@ class UsersController extends BaseController
             $fields = $model->getAvailableFields();
             echo new JsonResponse($fields);
         }
-        catch (Exception $e)
+        catch (\Throwable $e)
         {
             http_response_code(500);
             echo new JsonResponse($e->getMessage(), 'error', true);
