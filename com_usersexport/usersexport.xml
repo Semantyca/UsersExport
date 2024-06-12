@@ -29,6 +29,15 @@
         </languages>
     </administration>
 
+    <config>
+        <fields name="permissions">
+            <fieldset name="permissions" label="COM_USERSEXPORT_FIELDSET_PERMISSIONS">
+                <field name="rules" type="rules" label="COM_USERSEXPORT_RULES_LABEL"
+                       component="com_usersexport" section="component" />
+            </fieldset>
+        </fields>
+    </config>
+
     <scriptfile>admin/services/installer_script.php</scriptfile>
 
 </extension>

@@ -6,6 +6,8 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Response\JsonResponse;
+use Joomla\CMS\Access\Exception\NotAllowed;
+use Joomla\CMS\Language\Text;
 use Exception;
 
 class UsersController extends BaseController
@@ -20,6 +22,14 @@ class UsersController extends BaseController
         header('Content-Type: application/json');
         try
         {
+            $user = $app->getIdentity();
+
+            // Check if the user is authenticated and has access to the admin area
+            if ($user->guest || !$user->authorise('core.manage', 'com_usersexport'))
+            {
+                throw new NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+            }
+
             $currentPage  = $this->input->getInt('page', 1);
             $itemsPerPage = $this->input->getInt('size', 5);
             $fieldsString = $this->input->get('fields', '', 'string');
@@ -37,6 +47,11 @@ class UsersController extends BaseController
             $users = $model->getUsers($currentPage, $itemsPerPage, $fields, $search, $startDate, $endDate);
 
             echo new JsonResponse($users);
+        }
+        catch (NotAllowed $e)
+        {
+            http_response_code(403);
+            echo new JsonResponse(Text::_('JERROR_ALERTNOAUTHOR'), 'error', true);
         }
         catch (\Throwable $e)
         {
@@ -59,9 +74,22 @@ class UsersController extends BaseController
         header('Content-Type: application/json');
         try
         {
+            $user = $app->getIdentity();
+
+            // Check if the user is authenticated and has access to the admin area
+            if ($user->guest || !$user->authorise('core.manage', 'com_usersexport'))
+            {
+                throw new NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+            }
+
             $model = $this->getModel('Users', 'Administrator', ['ignore_request' => true]);
             $fields = $model->getAvailableFields();
             echo new JsonResponse($fields);
+        }
+        catch (NotAllowed $e)
+        {
+            http_response_code(403);
+            echo new JsonResponse(Text::_('JERROR_ALERTNOAUTHOR'), 'error', true);
         }
         catch (\Throwable $e)
         {

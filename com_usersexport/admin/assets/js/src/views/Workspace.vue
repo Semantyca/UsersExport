@@ -8,17 +8,17 @@
           <n-space>
             <n-button type="info" size="large" @click="toggleFilter">Filter</n-button>
             <n-button type="success" size="large" @click="togglePreview">Preview</n-button>
-            <n-button type="primary" size="large" @click="exportCSVData">Export CSV</n-button>
+            <n-button type="primary" size="large" @click="exportAllDataAsCSV">Export CSV</n-button>
           </n-space>
         </n-gi>
         <n-gi>
           <n-collapse-transition :show="showFilter">
-            <n-grid :cols="10" x-gap="12" responsive="screen">
+            <n-grid cols="5 l:10" y-gap="12" x-gap="12" responsive="screen">
               <n-gi :span="3">
                 <n-input size="large"
                          clearable
                          v-model="searchQuery"
-                         placeholder="Search..."
+                         placeholder="Search Username, Name or Email address..."
                          class="w-[25rem]"
                          @input="handleSearchInput" />
               </n-gi>
@@ -126,7 +126,7 @@ export default defineComponent({
           dateRange.value ? dateRange.value[0] : '',
           dateRange.value ? dateRange.value[1] : ''
       );
-      updateCsvData();
+      updatePreviewCsvData();
     };
 
     const fetchAvailableFields = async () => {
@@ -142,16 +142,24 @@ export default defineComponent({
     };
 
     const togglePreview = () => {
-      updateCsvData();
+      updatePreviewCsvData();
       showPreview.value = !showPreview.value;
     };
 
-    const exportCSVData = () => {
-      const data = userStore.getCurrentPage;
-      exportCSV(data);
+    const exportAllDataAsCSV = async () => {
+      await userStore.fetchAllUsers(
+          userStore.selectedFields,
+          searchQuery.value,
+          dateRange.value ? dateRange.value[0] : '',
+          dateRange.value ? dateRange.value[1] : ''
+      );
+      const data = userStore.getAllUsers;
+      const timestamp = new Date().toISOString().replace(/[:.-]/g, '');
+      const filename = `users_export_${timestamp}.csv`;
+      exportCSV(data, filename);
     };
 
-    const updateCsvData = () => {
+    const updatePreviewCsvData = () => {
       const data = userStore.getCurrentPage;
       csvData.value = data.length ? convertToCSV(data) : '';
     };
@@ -209,7 +217,7 @@ export default defineComponent({
       dateRange,
       toggleFilter,
       togglePreview,
-      exportCSVData,
+      exportAllDataAsCSV,
       loading,
       csvData,
       showPreview,
@@ -218,11 +226,11 @@ export default defineComponent({
       handleSearchInput,
       handleDateRangeChange,
       resetFields
-
     };
   }
 });
 </script>
+
 
 <style scoped>
 

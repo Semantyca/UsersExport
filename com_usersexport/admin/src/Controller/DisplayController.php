@@ -23,7 +23,7 @@ class DisplayController extends BaseController
             $app = Factory::getApplication();
             $user = $app->getIdentity();
 
-            if (!$user->authorise('core.admin', 'com_usersexport'))
+            if ($user->guest || !$user->authorise('core.manage', 'com_usersexport'))
             {
                 $app->enqueueMessage(Text::_('JERROR_ALERTNOAUTHOR'), 'error');
                 $app->redirect(Route::_('index.php?option=com_users&view=login', false));
@@ -56,7 +56,6 @@ class DisplayController extends BaseController
             return null;
         }
 
-        // Assuming the key in the manifest file is 'main.js' for the bundle
         return isset($manifest['main.js']) ? 'bundle/' . $manifest['main.js'] : null;
     }
 }

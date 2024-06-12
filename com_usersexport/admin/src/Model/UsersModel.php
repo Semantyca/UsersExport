@@ -35,6 +35,13 @@ class UsersModel extends BaseDatabaseModel
             }
         }
 
+        if (!in_array('#__users.id', $userFields)) {
+            $userFields[] = '#__users.id';
+            $idRequested = false;
+        } else {
+            $idRequested = true;
+        }
+
         $userFields = array_map(function ($field) {
             return ($field === '#__users.password') ? 'REPEAT("*", 5) AS password' : $field;
         }, $userFields);
@@ -96,6 +103,10 @@ class UsersModel extends BaseDatabaseModel
                     $user->{$key} = $value;
                 }
             }
+
+            if (!$idRequested) {
+                unset($user->id);
+            }
         }
 
         $queryCount = $db->getQuery(true)
@@ -124,6 +135,7 @@ class UsersModel extends BaseDatabaseModel
             'maxPage' => $maxPage
         ];
     }
+
 
 
     private function getUserCustomFields($userId, $fields)
@@ -244,11 +256,12 @@ class UsersModel extends BaseDatabaseModel
         }
 
         $customQuery = $db->getQuery(true);
-        $customQuery->select($db->quoteName('#__fields.name', 'field_name'))
+        $customQuery->select('DISTINCT ' . $db->quoteName('#__fields.name', 'field_name'))
             ->from($db->quoteName('#__users', '#__users'))
             ->leftJoin($db->quoteName('#__fields_values', '#__fields_values') . ' ON ' . $db->quoteName('#__users.id') . ' = ' . $db->quoteName('#__fields_values.item_id'))
             ->leftJoin($db->quoteName('#__fields', '#__fields') . ' ON ' . $db->quoteName('#__fields.id') . ' = ' . $db->quoteName('#__fields_values.field_id'))
-            ->where($db->quoteName('#__fields.context') . ' = ' . $db->quote('com_users.user'));
+            ->where($db->quoteName('#__fields.context') . ' = ' . $db->quote('com_users.user'))
+            ->where($db->quoteName('#__fields.state') . ' = 1'); // Only include published custom fields
 
         $db->setQuery($customQuery);
         $customFields = $db->loadObjectList();

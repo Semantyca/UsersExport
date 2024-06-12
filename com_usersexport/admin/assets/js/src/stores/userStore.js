@@ -3,6 +3,9 @@ import axios from 'axios';
 import { ref, computed } from 'vue';
 import { useMessage, useLoadingBar } from 'naive-ui';
 
+axios.defaults.withCredentials = true;
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
 export const useUserStore = defineStore('userStore', () => {
     const message = useMessage();
     const loadingBar = useLoadingBar();
@@ -13,6 +16,7 @@ export const useUserStore = defineStore('userStore', () => {
         count: 0,
         pageCount: 1
     });
+    const allUsers = ref([]);
     const availableFields = ref([]);
     const defaultFields = ref({
         label: 'users',
@@ -42,6 +46,8 @@ export const useUserStore = defineStore('userStore', () => {
         const pageData = userMap.value.get(pagination.value.page);
         return pageData ? pageData.docs : [];
     });
+
+    const getAllUsers = computed(() => allUsers.value);
 
     const getAvailableFields = computed(() => availableFields.value);
 
@@ -90,6 +96,41 @@ export const useUserStore = defineStore('userStore', () => {
         }
     };
 
+    const fetchAllUsers = async (fields = [], searchValue = '', startDate = '', endDate = '') => {
+        try {
+            loadingBar.start();
+            let fieldsParam;
+            if (fields.length > 0) {
+                fieldsParam = fields.join(',');
+            } else {
+                fieldsParam = defaultFields.value.children.map(field => field.key).join(',');
+                message.info('No fields selected, using default fields.');
+            }
+
+            const response = await axios.get('index.php?option=com_usersexport&task=users.findAll', {
+                params: {
+                    page: 1,
+                    size: 0,
+                    fields: fieldsParam,
+                    search: searchValue,
+                    start: startDate,
+                    end: endDate
+                }
+            });
+
+            const pageObj = response.data;
+            if (pageObj && pageObj.data) {
+                const { docs } = pageObj.data;
+                allUsers.value = docs;
+            }
+            loadingBar.finish();
+        } catch (error) {
+            loadingBar.error();
+            message.error('Error fetching all users: ' + error.message);
+            console.error('Error fetching all users:', error);
+        }
+    };
+
     const fetchAvailableFields = async () => {
         try {
             const response = await axios.get('index.php?option=com_usersexport&task=users.getAvailableFields');
@@ -110,6 +151,7 @@ export const useUserStore = defineStore('userStore', () => {
     return {
         userMap,
         pagination,
+        allUsers,
         availableFields,
         defaultFields,
         selectedFields,
@@ -118,10 +160,12 @@ export const useUserStore = defineStore('userStore', () => {
         end,
         getPagination,
         getCurrentPage,
+        getAllUsers,
         getAvailableFields,
         getSelectedFields,
         getCsvData,
         fetchUsers,
+        fetchAllUsers,
         fetchAvailableFields,
         convertToCSV
     };
