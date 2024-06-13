@@ -13,7 +13,7 @@
         </n-gi>
         <n-gi>
           <n-collapse-transition :show="showFilter">
-            <n-grid cols="5 l:10" y-gap="12" x-gap="12" responsive="screen">
+            <n-grid cols="5 xl:10" y-gap="12" x-gap="12" responsive="screen">
               <n-gi :span="3">
                 <n-input size="large"
                          clearable

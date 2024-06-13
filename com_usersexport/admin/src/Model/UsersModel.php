@@ -252,7 +252,9 @@ class UsersModel extends BaseDatabaseModel
         }
 
         foreach ($tables as $table) {
-            $options[] = $table;
+            if (!empty($table['children'])) { // Only add table if it has fields
+                $options[] = $table;
+            }
         }
 
         $customQuery = $db->getQuery(true);
@@ -279,8 +281,11 @@ class UsersModel extends BaseDatabaseModel
             ];
         }
 
-        $options[] = $customFieldOptions;
+        if (!empty($customFieldOptions['children'])) { // Only add custom fields if there are any
+            $options[] = $customFieldOptions;
+        }
 
         return $options;
     }
+
 }
