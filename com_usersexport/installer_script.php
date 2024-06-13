@@ -39,7 +39,7 @@ class InstallerScript
 
     private function cleanBundleDirectory($type)
     {
-        $bundleDir = JPATH_ADMINISTRATOR . '/components/com_usersexport/assets/bundle';
+        $bundleDir = JPATH_ADMINISTRATOR . '/components/com_usersexport/admin/assets/bundle';
         $logEntries = [];
 
         if (is_dir($bundleDir)) {
@@ -73,14 +73,14 @@ class InstallerScript
 
     private function createMarkerFile($type)
     {
-        $markerFilePath = JPATH_ADMINISTRATOR . "/components/com_usersexport/assets/{$type}_marker.txt";
+        $markerFilePath = JPATH_ADMINISTRATOR . "/components/com_usersexport/admin/assets/{$type}_marker.txt";
         file_put_contents($markerFilePath, "Marker file for event: {$type}");
         $this->logMessage("Created marker file: {$markerFilePath}");
     }
 
     private function logFilesInDirectory()
     {
-        $dir = JPATH_ADMINISTRATOR . '/components/com_usersexport/assets/bundle';
+        $dir = JPATH_ADMINISTRATOR . '/components/com_usersexport/admin/assets/bundle';
         if (is_dir($dir)) {
             $files = array_diff(scandir($dir), array('.', '..'));
             if (empty($files)) {
