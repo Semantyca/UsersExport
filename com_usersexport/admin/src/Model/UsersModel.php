@@ -137,7 +137,6 @@ class UsersModel extends BaseDatabaseModel
     }
 
 
-
     private function getUserCustomFields($userId, $fields)
     {
         $db = $this->getDatabase();
@@ -153,9 +152,7 @@ class UsersModel extends BaseDatabaseModel
 
         $result = [];
         foreach ($customFields as $customField) {
-            //if (in_array($customField->field_name, $fields)) {
-                $result[$customField->field_name] = $customField->field_value;
-            //}
+            $result[$customField->field_name] = $customField->field_value;
         }
 
         return $result;
@@ -252,7 +249,7 @@ class UsersModel extends BaseDatabaseModel
         }
 
         foreach ($tables as $table) {
-            if (!empty($table['children'])) { // Only add table if it has fields
+            if (!empty($table['children'])) {
                 $options[] = $table;
             }
         }
@@ -263,7 +260,7 @@ class UsersModel extends BaseDatabaseModel
             ->leftJoin($db->quoteName('#__fields_values', '#__fields_values') . ' ON ' . $db->quoteName('#__users.id') . ' = ' . $db->quoteName('#__fields_values.item_id'))
             ->leftJoin($db->quoteName('#__fields', '#__fields') . ' ON ' . $db->quoteName('#__fields.id') . ' = ' . $db->quoteName('#__fields_values.field_id'))
             ->where($db->quoteName('#__fields.context') . ' = ' . $db->quote('com_users.user'))
-            ->where($db->quoteName('#__fields.state') . ' = 1'); // Only include published custom fields
+            ->where($db->quoteName('#__fields.state') . ' = 1');
 
         $db->setQuery($customQuery);
         $customFields = $db->loadObjectList();
@@ -281,7 +278,7 @@ class UsersModel extends BaseDatabaseModel
             ];
         }
 
-        if (!empty($customFieldOptions['children'])) { // Only add custom fields if there are any
+        if (!empty($customFieldOptions['children'])) {
             $options[] = $customFieldOptions;
         }
 

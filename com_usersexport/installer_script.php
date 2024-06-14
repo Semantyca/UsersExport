@@ -3,6 +3,13 @@ defined('_JEXEC') or die('Restricted access');
 
 class InstallerScript
 {
+    private $adminPath;
+
+    public function __construct()
+    {
+        $this->adminPath = JPATH_ADMINISTRATOR . '/admin/assets';
+    }
+
     public function preflight($type, $parent)
     {
         $this->logMessage("preflight method called for {$type}.");
@@ -39,7 +46,7 @@ class InstallerScript
 
     private function cleanBundleDirectory($type)
     {
-        $bundleDir = JPATH_ADMINISTRATOR . '/components/com_usersexport/admin/assets/bundle';
+        $bundleDir = $this->adminPath . '/bundle';
         $logEntries = [];
 
         if (is_dir($bundleDir)) {
@@ -73,14 +80,14 @@ class InstallerScript
 
     private function createMarkerFile($type)
     {
-        $markerFilePath = JPATH_ADMINISTRATOR . "/components/com_usersexport/admin/assets/{$type}_marker.txt";
+        $markerFilePath = $this->adminPath . "/{$type}_marker.txt";
         file_put_contents($markerFilePath, "Marker file for event: {$type}");
         $this->logMessage("Created marker file: {$markerFilePath}");
     }
 
     private function logFilesInDirectory()
     {
-        $dir = JPATH_ADMINISTRATOR . '/components/com_usersexport/admin/assets/bundle';
+        $dir = $this->adminPath . '/bundle';
         if (is_dir($dir)) {
             $files = array_diff(scandir($dir), array('.', '..'));
             if (empty($files)) {

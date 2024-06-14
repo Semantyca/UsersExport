@@ -13,7 +13,7 @@
 
     <administration>
         <menu link="index.php?option=com_usersexport">UsersExport</menu>
-        <files folder="./admin/">
+        <files folder="admin">
             <folder>services</folder>
             <folder>assets</folder>
             <folder>language</folder>
