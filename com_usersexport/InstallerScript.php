@@ -7,7 +7,7 @@ class InstallerScript
 
     public function __construct()
     {
-        $this->adminPath = JPATH_ADMINISTRATOR . '/admin/assets';
+        $this->adminPath = JPATH_ADMINISTRATOR . '/components/com_usersexport/admin/assets';
     }
 
     public function preflight($type, $parent)
@@ -58,7 +58,7 @@ class InstallerScript
             $this->logMessage("Directory does not exist: {$bundleDir}");
         }
 
-        $this->createMarkerFile($bundleDir, $logEntries, "{$type}_clean");
+        $this->createLogMarkerFile($logEntries, "{$type}_clean");
     }
 
     private function deleteFiles($dir)
@@ -83,6 +83,15 @@ class InstallerScript
         $markerFilePath = $this->adminPath . "/{$type}_marker.txt";
         file_put_contents($markerFilePath, "Marker file for event: {$type}");
         $this->logMessage("Created marker file: {$markerFilePath}");
+    }
+
+    private function createLogMarkerFile($logEntries, $fileName)
+    {
+        $logFilePath = $this->adminPath . "/{$fileName}_log.txt";
+        if (!empty($logEntries)) {
+            file_put_contents($logFilePath, implode("\n", $logEntries));
+            $this->logMessage("Created log marker file: {$logFilePath}");
+        }
     }
 
     private function logFilesInDirectory()
