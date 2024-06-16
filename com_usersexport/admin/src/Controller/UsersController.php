@@ -66,13 +66,6 @@ class UsersController extends BaseController
         header('Content-Type: application/json');
         try
         {
-            $user = $app->getIdentity();
-
-            // Check if the user is authenticated and has access to the admin area
-            if ($user->guest || !$user->authorise('core.manage', 'com_usersexport'))
-            {
-                throw new NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
-            }
 
             $model = $this->getModel('Users', 'Administrator', ['ignore_request' => true]);
             $fields = $model->getAvailableFields();

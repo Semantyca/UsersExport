@@ -4,10 +4,11 @@ namespace Semantyca\Component\Usersexport\Administrator\Controller;
 
 defined('_JEXEC') or die;
 
+use Joomla\CMS\Access\Exception\NotAllowed;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\MVC\Controller\BaseController;
-use Joomla\CMS\Router\Route;
 use Semantyca\Component\Usersexport\Administrator\Helper\Constants;
 
 class DisplayController extends BaseController
@@ -21,10 +22,11 @@ class DisplayController extends BaseController
             $app = Factory::getApplication();
             $user = $app->getIdentity();
 
-            if ($user->guest)
+            if ($user->guest || !$user->authorise('core.manage', 'com_usersexport'))
             {
-                $app->redirect(Route::_('index.php?option=com_users&view=login', false));
-                return false;
+                //$app->redirect(Route::_('index.php?option=com_users&view=login', false));
+                //return false;
+                throw new NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
             }
 
             $view = $this->getView('Dashboard', 'html');

@@ -158,12 +158,12 @@ export default defineComponent({
       const data = userStore.getAllUsers;
       const timestamp = new Date().toISOString().replace(/[:.-]/g, '');
       const filename = `users_export_${timestamp}.csv`;
-      exportCSV(data, filename, includeColumnNames.value);
+      exportCSV(data, filename, includeColumnNames.value, userStore.getSelectedFields);
     };
 
     const updatePreviewCsvData = () => {
       const data = userStore.getCurrentPage;
-      csvData.value = data.length ? convertToCSV(data, includeColumnNames.value) : '';
+      csvData.value = data.length ? convertToCSV(data, includeColumnNames.value, userStore.getSelectedFields) : '';
     };
 
     const handleIncludeColumnNamesChange = (checked) => {
