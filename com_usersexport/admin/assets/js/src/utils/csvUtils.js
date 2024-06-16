@@ -1,8 +1,8 @@
 export const convertToCSV = (data, includeHeader = true, headers = []) => {
     if (data.length === 0) return '';
-
+    console.log(headers);
     const filteredHeaders = headers.map(header => header.split('.').pop());
-
+    console.log(filteredHeaders);
     const array = includeHeader ? [filteredHeaders].concat(data) : data;
 
     return array.map((row, index) => {
