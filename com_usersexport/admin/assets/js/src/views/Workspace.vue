@@ -1,71 +1,71 @@
 <template>
-    <n-card>
-      <n-grid :cols="1" x-gap="12" y-gap="12" class="mt-1">
-        <n-gi>
-          <n-h2>UsersExport</n-h2>
-        </n-gi>
-        <n-gi>
-          <n-space>
-            <n-button type="info" size="large" @click="toggleFilter">Filter</n-button>
-            <n-button type="success" size="large" @click="togglePreview">Preview</n-button>
-            <n-button type="primary" size="large" @click="exportAllDataAsCSV">Export CSV</n-button>
-<!--            <n-checkbox size="large">Include the columns name</n-checkbox>-->
-          </n-space>
-        </n-gi>
-        <n-gi>
-          <n-collapse-transition :show="showFilter">
-            <n-grid cols="5 xl:10" y-gap="12" x-gap="12" responsive="screen">
-              <n-gi :span="3">
-                <n-input size="large"
-                         clearable
-                         v-model="searchQuery"
-                         placeholder="Search Username, Name or Email address..."
-                         class="w-[25rem]"
-                         @input="handleSearchInput" />
-              </n-gi>
-              <n-gi span="2">
-                <n-date-picker size="large"
-                               clearable
-                               v-model="dateRange"
-                               type="daterange"
-                               class="w-[25rem]"
-                               @update:value="handleDateRangeChange" />
-              </n-gi>
-              <n-gi span="5">
-                <n-tree-select
-                    :default-value="userStore.defaultFields.children.map(field => field.key)"
-                    filterable
-                    size="large"
-                    v-model="userStore.selectedFields"
-                    multiple
-                    check-strategy="child"
-                    checkable
-                    cascade
-                    :options="userStore.availableFields"
-                    placeholder="Select columns"
-                    class="w-[25rem]"
-                    @update:value="handleTreeSelectChange"
-                />
-              </n-gi>
-            </n-grid>
-          </n-collapse-transition>
-        </n-gi>
-        <n-gi>
-          <n-collapse-transition :show="showPreview">
-            <n-code :code="csvData" language="csv" :hljs="hljs" />
-          </n-collapse-transition>
-        </n-gi>
-        <n-gi>
-          <n-data-table
-              remote
-              :columns="columns"
-              :data="userStore.getCurrentPage"
-              :pagination="userStore.getPagination"
-              @update:page="handlePageChange"
-          />
-        </n-gi>
-      </n-grid>
-    </n-card>
+  <n-card>
+    <n-grid :cols="1" x-gap="12" y-gap="12" class="mt-1">
+      <n-gi>
+        <n-h2>UsersExport</n-h2>
+      </n-gi>
+      <n-gi>
+        <n-space align="baseline">
+          <n-button type="info" size="large" @click="toggleFilter">Filter</n-button>
+          <n-button type="success" size="large" @click="togglePreview">Preview</n-button>
+          <n-button type="primary" size="large" @click="exportAllDataAsCSV">Export CSV</n-button>
+          <n-checkbox :checked="includeColumnNames" @update:checked="handleIncludeColumnNamesChange">Include columns name</n-checkbox>
+        </n-space>
+      </n-gi>
+      <n-gi>
+        <n-collapse-transition :show="showFilter">
+          <n-grid cols="5 xl:10" y-gap="12" x-gap="12" responsive="screen">
+            <n-gi :span="3">
+              <n-input size="large"
+                       clearable
+                       v-model="searchQuery"
+                       placeholder="Search Username, Name or Email address..."
+                       class="w-[25rem]"
+                       @input="handleSearchInput" />
+            </n-gi>
+            <n-gi span="2">
+              <n-date-picker size="large"
+                             clearable
+                             v-model="dateRange"
+                             type="daterange"
+                             class="w-[25rem]"
+                             @update:value="handleDateRangeChange" />
+            </n-gi>
+            <n-gi span="5">
+              <n-tree-select
+                  :default-value="userStore.defaultFields.children.map(field => field.key)"
+                  filterable
+                  size="large"
+                  v-model="userStore.selectedFields"
+                  multiple
+                  check-strategy="child"
+                  checkable
+                  cascade
+                  :options="userStore.availableFields"
+                  placeholder="Select columns"
+                  class="w-[25rem]"
+                  @update:value="handleTreeSelectChange"
+              />
+            </n-gi>
+          </n-grid>
+        </n-collapse-transition>
+      </n-gi>
+      <n-gi>
+        <n-collapse-transition :show="showPreview">
+          <n-code :code="csvData" language="csv" :hljs="hljs" />
+        </n-collapse-transition>
+      </n-gi>
+      <n-gi>
+        <n-data-table
+            remote
+            :columns="columns"
+            :data="userStore.getCurrentPage"
+            :pagination="userStore.getPagination"
+            @update:page="handlePageChange"
+        />
+      </n-gi>
+    </n-grid>
+  </n-card>
 </template>
 
 <script>
@@ -78,7 +78,6 @@ import {
 } from 'naive-ui';
 import { debounce } from 'lodash';
 import { convertToCSV, exportCSV } from '../utils/csvUtils';
-
 
 export default defineComponent({
   components: {
@@ -107,12 +106,12 @@ export default defineComponent({
     const csvData = ref('');
     const showFilter = ref(false);
     const showPreview = ref(false);
-
+    const includeColumnNames = ref(true);
 
     const updateColumns = () => {
       const newColumns = userStore.selectedFields.map(field => {
         const column = field.split('.').pop();
-        return { title: column, key: column };
+        return {title: column, key: column};
       });
 
       if (JSON.stringify(columns.value) !== JSON.stringify(newColumns)) {
@@ -158,12 +157,17 @@ export default defineComponent({
       const data = userStore.getAllUsers;
       const timestamp = new Date().toISOString().replace(/[:.-]/g, '');
       const filename = `users_export_${timestamp}.csv`;
-      exportCSV(data, filename);
+      exportCSV(data, filename, includeColumnNames.value);
     };
 
     const updatePreviewCsvData = () => {
       const data = userStore.getCurrentPage;
-      csvData.value = data.length ? convertToCSV(data) : '';
+      csvData.value = data.length ? convertToCSV(data, includeColumnNames.value) : '';
+    };
+
+    const handleIncludeColumnNamesChange = (checked) => {
+      includeColumnNames.value = checked;
+      updatePreviewCsvData();
     };
 
     onMounted(async () => {
@@ -227,12 +231,13 @@ export default defineComponent({
       handleTreeSelectChange,
       handleSearchInput,
       handleDateRangeChange,
-      resetFields
+      resetFields,
+      includeColumnNames,
+      handleIncludeColumnNamesChange
     };
   }
 });
 </script>
-
 
 <style scoped>
 
