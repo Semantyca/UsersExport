@@ -6,7 +6,7 @@
     <authorUrl>https://absolute.lv</authorUrl>
     <copyright>Nzimas</copyright>
     <license>GPL v3</license>
-    <version>0.0.6</version>
+    <version>0.0.7</version>
     <description>it helps to export user list</description>
 
     <namespace path="src">Semantyca\Component\Usersexport</namespace>
@@ -14,6 +14,7 @@
     <administration>
         <menu link="index.php?option=com_usersexport">UsersExport</menu>
         <files folder="admin">
+            <filename>../InstallerScript.php</filename>
             <folder>services</folder>
             <folder>assets</folder>
             <folder>language</folder>
@@ -29,6 +30,6 @@
         </languages>
     </administration>
 
-    <scriptfile>./InstallerScript.php</scriptfile>
+    <scriptfile>InstallerScript.php</scriptfile>
 
 </extension>
