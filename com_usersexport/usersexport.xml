@@ -30,6 +30,6 @@
         </languages>
     </administration>
 
-    <scriptfile>./admin/InstallerScript.php</scriptfile>
+    <scriptfile>InstallerScript.php</scriptfile>
 
 </extension>
