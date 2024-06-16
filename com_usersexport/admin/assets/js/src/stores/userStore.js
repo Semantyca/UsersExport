@@ -40,7 +40,9 @@ export const useUserStore = defineStore('userStore', () => {
         pageSize: pagination.value.pageSize,
         itemCount: pagination.value.count,
         pageCount: pagination.value.pageCount,
-        size: 'large'
+        size: 'large',
+        pageSizes: [10, 20, 30],
+        showSizePicker: true
     }));
 
     const getCurrentPage = computed(() => {

@@ -62,6 +62,7 @@
             :data="userStore.getCurrentPage"
             :pagination="userStore.getPagination"
             @update:page="handlePageChange"
+            @update:page-size="handlePageSizeChange"
         />
       </n-gi>
     </n-grid>
@@ -206,6 +207,11 @@ export default defineComponent({
       fetchUsers(page);
     }
 
+    const handlePageSizeChange = (newPageSize) => {
+      userStore.pagination.pageSize = newPageSize;
+      fetchUsers(1);
+    };
+
     const resetFields = () => {
       searchQuery.value = '';
       dateRange.value = null;
@@ -218,6 +224,7 @@ export default defineComponent({
       columns,
       userStore,
       handlePageChange,
+      handlePageSizeChange,
       showFilter,
       searchQuery,
       dateRange,
