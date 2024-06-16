@@ -1,15 +1,16 @@
-export const convertToCSV = (data) => {
+export const convertToCSV = (data, includeHeader = true) => {
     if (data.length === 0) return '';
-    const array = [Object.keys(data[0])].concat(data);
+    const array = includeHeader ? [Object.keys(data[0])].concat(data) : data;
+
     return array.map(row => Object.values(row).map(value => `"${value}"`).join(',')).join('\n');
 };
 
-export const exportCSV = (data, filename = 'users_export.csv') => {
+export const exportCSV = (data, filename = 'users_export.csv', includeHeader = true) => {
     if (data.length === 0) {
         alert('No data available to export.');
         return;
     }
-    const csv = convertToCSV(data);
+    const csv = convertToCSV(data, includeHeader);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);

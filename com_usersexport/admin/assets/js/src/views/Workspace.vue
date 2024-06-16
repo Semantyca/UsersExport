@@ -9,6 +9,7 @@
             <n-button type="info" size="large" @click="toggleFilter">Filter</n-button>
             <n-button type="success" size="large" @click="togglePreview">Preview</n-button>
             <n-button type="primary" size="large" @click="exportAllDataAsCSV">Export CSV</n-button>
+<!--            <n-checkbox size="large">Include the columns name</n-checkbox>-->
           </n-space>
         </n-gi>
         <n-gi>
@@ -73,7 +74,7 @@ import { useUserStore } from '../stores/userStore';
 import hljs from 'highlight.js';
 import {
   NCard, NDataTable, NButton, NInput, NDatePicker, NTreeSelect,
-  NSkeleton, NGrid, NGi, NH2, NH4, NSpace, NCollapseTransition, NCode
+  NSkeleton, NGrid, NGi, NH2, NH4, NSpace, NCollapseTransition, NCode, NCheckbox
 } from 'naive-ui';
 import { debounce } from 'lodash';
 import { convertToCSV, exportCSV } from '../utils/csvUtils';
@@ -94,7 +95,8 @@ export default defineComponent({
     NH4,
     NSpace,
     NCollapseTransition,
-    NCode
+    NCode,
+    NCheckbox
   },
   setup() {
     const userStore = useUserStore();

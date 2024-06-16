@@ -14,7 +14,8 @@ export const useUserStore = defineStore('userStore', () => {
         page: 1,
         pageSize: 10,
         count: 0,
-        pageCount: 1
+        pageCount: 1,
+        showQuickJumper: true
     });
     const allUsers = ref([]);
     const availableFields = ref([]);

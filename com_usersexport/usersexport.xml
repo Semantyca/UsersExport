@@ -29,7 +29,7 @@
             <language tag="pt-PT">admin/language/pt-PT/pt-PT.com_usersexport.sys.ini</language>
         </languages>
 
-        <scriptfile>../InstallerScript.php</scriptfile>
+        <scriptfile>./InstallerScript.php</scriptfile>
 
     </administration>
 
