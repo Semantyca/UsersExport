@@ -8,7 +8,6 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Router\Route;
-use Joomla\CMS\Access\Exception\NotAllowed;
 use Semantyca\Component\Usersexport\Administrator\Helper\Constants;
 
 class DisplayController extends BaseController

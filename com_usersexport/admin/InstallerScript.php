@@ -1,56 +1,40 @@
 <?php
-
-namespace admin;
-use JLog;
-
 defined('_JEXEC') or die('Restricted access');
 
 class InstallerScript
 {
-    private $adminPath;
-
-    public function __construct()
-    {
-        $this->adminPath = JPATH_ADMINISTRATOR . '/components/com_usersexport/admin/assets';
-    }
-
     public function preflight($type, $parent)
     {
         $this->logMessage("preflight method called for {$type}.");
 
         if ($type === 'install' || $type === 'update') {
             $this->logMessage("Starting cleanBundleDirectory process for {$type}.");
-            $this->cleanBundleDirectory($type);
+            $this->cleanBundleDirectory();
             $this->logMessage("Finished cleanBundleDirectory process for {$type}.");
         }
-        $this->createMarkerFile("preflight_{$type}");
     }
 
     public function install($parent)
     {
-        $this->createMarkerFile("install");
     }
 
     public function update($parent)
     {
-        $this->createMarkerFile("update");
     }
 
     public function uninstall($parent)
     {
-        $this->createMarkerFile("uninstall");
     }
 
     public function postflight($type, $parent)
     {
         $this->logMessage("postflight method called for {$type}.");
         $this->logFilesInDirectory();
-        $this->createMarkerFile("postflight_{$type}");
     }
 
-    private function cleanBundleDirectory($type)
+    private function cleanBundleDirectory()
     {
-        $bundleDir = $this->adminPath . '/bundle';
+        $bundleDir = JPATH_ADMINISTRATOR . '/components/com_usersexport/assets/bundle';
         $logEntries = [];
 
         if (is_dir($bundleDir)) {
@@ -62,7 +46,7 @@ class InstallerScript
             $this->logMessage("Directory does not exist: {$bundleDir}");
         }
 
-        $this->createLogMarkerFile($logEntries, "{$type}_clean");
+        $this->createMarkerFile($bundleDir, $logEntries);
     }
 
     private function deleteFiles($dir)
@@ -82,25 +66,18 @@ class InstallerScript
         return $logEntries;
     }
 
-    private function createMarkerFile($type)
+    private function createMarkerFile($dir, $logEntries)
     {
-        $markerFilePath = $this->adminPath . "/{$type}_marker.txt";
-        file_put_contents($markerFilePath, "Marker file for event: {$type}");
-        $this->logMessage("Created marker file: {$markerFilePath}");
-    }
-
-    private function createLogMarkerFile($logEntries, $fileName)
-    {
-        $logFilePath = $this->adminPath . "/{$fileName}_log.txt";
+        $markerFilePath = $dir . '/deletion_log.txt';
         if (!empty($logEntries)) {
-            file_put_contents($logFilePath, implode("\n", $logEntries));
-            $this->logMessage("Created log marker file: {$logFilePath}");
+            file_put_contents($markerFilePath, implode("\n", $logEntries));
+            $this->logMessage("Created marker file: {$markerFilePath}");
         }
     }
 
     private function logFilesInDirectory()
     {
-        $dir = $this->adminPath . '/bundle';
+        $dir = JPATH_ADMINISTRATOR . '/components/com_usersexport/assets/bundle';
         if (is_dir($dir)) {
             $files = array_diff(scandir($dir), array('.', '..'));
             if (empty($files)) {
@@ -115,7 +92,7 @@ class InstallerScript
         }
     }
 
-    private function logMessage($message)
+    private function logMessage($message): void
     {
         JLog::add($message, JLog::INFO, 'com_usersexport');
     }
