@@ -22,14 +22,6 @@ class UsersController extends BaseController
         header('Content-Type: application/json');
         try
         {
-            $user = $app->getIdentity();
-
-            // Check if the user is authenticated and has access to the admin area
-            if ($user->guest || !$user->authorise('core.manage', 'com_usersexport'))
-            {
-                throw new NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
-            }
-
             $currentPage  = $this->input->getInt('page', 1);
             $itemsPerPage = $this->input->getInt('size', 5);
             $fieldsString = $this->input->get('fields', '', 'string');
