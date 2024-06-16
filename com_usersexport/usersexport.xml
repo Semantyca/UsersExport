@@ -28,8 +28,10 @@
             <language tag="pt-PT">admin/language/pt-PT/pt-PT.com_usersexport.ini</language>
             <language tag="pt-PT">admin/language/pt-PT/pt-PT.com_usersexport.sys.ini</language>
         </languages>
+
+        <scriptfile>InstallerScript.php</scriptfile>
     </administration>
 
-    <scriptfile>./InstallerScript.php</scriptfile>
+
 
 </extension>
