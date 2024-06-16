@@ -1,4 +1,8 @@
 <?php
+
+namespace admin;
+use JLog;
+
 defined('_JEXEC') or die('Restricted access');
 
 class InstallerScript

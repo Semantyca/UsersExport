@@ -14,7 +14,7 @@
     <administration>
         <menu link="index.php?option=com_usersexport">UsersExport</menu>
         <files folder="admin">
-            <filename>../InstallerScript.php</filename>
+            <filename>InstallerScript.php</filename>
             <folder>services</folder>
             <folder>assets</folder>
             <folder>language</folder>
@@ -30,6 +30,6 @@
         </languages>
     </administration>
 
-    <scriptfile>InstallerScript.php</scriptfile>
+    <scriptfile>./admin/InstallerScript.php</scriptfile>
 
 </extension>
