@@ -2,12 +2,12 @@
 <extension type="component" version="4.0" method="upgrade">
     <name>Usersexport</name>
     <creationDate>June 2024</creationDate>
-    <author>aidazi</author>
+    <author>Team Absolute</author>
     <authorUrl>https://absolute.lv</authorUrl>
-    <copyright>Nzimas</copyright>
+    <copyright>Absolute Management SIA</copyright>
     <license>GPL v3</license>
-    <version>0.0.7</version>
-    <description>it helps to export user list</description>
+    <version>0.9</version>
+    <description>Simple Jooomla 4 / 5 component to export user accounts data to a CSV file.</description>
 
     <namespace path="src">Semantyca\Component\Usersexport</namespace>
 
