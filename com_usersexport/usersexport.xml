@@ -8,6 +8,7 @@
     <license>GPL v3</license>
     <version>0.9</version>
     <description>Simple Jooomla 4 / 5 component to export user accounts data to a CSV file.</description>
+    <scriptfile>installer_script.php</scriptfile>
 
     <namespace path="src">Semantyca\Component\Usersexport</namespace>
 
@@ -29,6 +30,5 @@
         </languages>
     </administration>
 
-    <scriptfile>installer_script.php</scriptfile>
 
 </extension>

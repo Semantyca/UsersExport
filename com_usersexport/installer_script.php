@@ -1,7 +1,7 @@
 <?php
 defined('_JEXEC') or die('Restricted access');
 
-class InstallerScript
+class com_usersexportInstallerScript
 {
     public function preflight($type, $parent)
     {
@@ -92,7 +92,7 @@ class InstallerScript
         }
     }
 
-    private function logMessage($message): void
+    private function logMessage($message)
     {
         JLog::add($message, JLog::INFO, 'com_usersexport');
     }
