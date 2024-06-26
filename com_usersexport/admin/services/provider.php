@@ -1,5 +1,15 @@
 <?php
+/**
+ * @package     Usersexport
+ * @subpackage  Administrator
+ *
+ * @copyright   Copyright (C) 2024 Absolute Management SIA. All rights reserved.
+ * @license     GNU General Public License version 3 or later; see LICENSE.txt
+ */
+
 namespace Semantyca\Component;
+
+defined('_JEXEC') or die;
 
 use Joomla\CMS\Dispatcher\ComponentDispatcherFactoryInterface;
 use Joomla\CMS\Extension\ComponentInterface;
