@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="component" version="4.0" method="upgrade">
-    <name>Usersexport</name>
+    <name>UsersExport</name>
     <creationDate>June 2024</creationDate>
     <author>Team Absolute</author>
-    <authorUrl>https://absolute.lv</authorUrl>
+    <authorUrl>https://www.absolute.lv</authorUrl>
     <copyright>Absolute Management SIA</copyright>
     <license>GPL v3</license>
-    <version>0.9</version>
-    <description>Simple Joomla 4 / 5 component to export user accounts data to a CSV file.</description>
+    <version>20240626</version>
+    <description>Simple Joomla 4 / 5 component to mass export user profile data to a CSV file.</description>
     <scriptfile>installer_script.php</scriptfile>
 
     <namespace path="src">Semantyca\Component\Usersexport</namespace>
@@ -31,7 +31,7 @@
     </administration>
 
     <updateservers>
-        <server type="extension" priority="1" name="Usersexport Updates">https://absolute.lv/updates/usersexport.xml</server>
+        <server type="extension" priority="1" name="UsersExport Updates">https://www.absolute.lv/updates/usersexport.xml</server>
     </updateservers>
 
 </extension>
